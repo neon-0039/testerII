@@ -17,7 +17,7 @@ const mk = new misskey.api.APIClient({
 // Gemini APIに直接リクエストを送る関数
 async function askGemini(prompt) {
     // 【修正】無料枠で最も安定して通る v1beta のフルパスに固定します
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.geminiKey}`;
     
     const payload = {
         contents: [{ parts: [{ text: prompt }] }]
