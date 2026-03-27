@@ -9,18 +9,21 @@ const config = {
     characterSetting: "好きに回答してください"
 };
 
-// 初期化（認証情報を credential として渡す形式に修正）
+// 1. Misskeyクライアント初期化 (認証エラー修正済み)
 const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
-    credential: config.token // ここを i から credential に変更
+    credential: config.token
 });
 
+// 2. Gemini初期化 (APIバージョンを 'v1' に固定)
 const genAI = new GoogleGenerativeAI(config.geminiKey);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel(
+    { model: "gemini-1.5-flash" },
+    { apiVersion: 'v1' } // ここを追加して v1beta 回避！
+);
 
 async function main() {
     try {
-        // 1. 自分の情報を取得
         const me = await mk.request('i');
         const my_id = me.id;
         const my_username = me.username;
@@ -30,7 +33,6 @@ async function main() {
         try {
             const followers = await mk.request('users/followers', { userId: my_id, limit: 10 });
             for (const f of followers) {
-                // follower.follower が存在し、自分がフォローしていない場合
                 const target = f.follower;
                 if (target && !target.isFollowing && !target.isBot && target.id !== my_id) {
                     await mk.request('following/create', { userId: target.id })
@@ -42,7 +44,7 @@ async function main() {
             console.log("フォロバ処理スキップ。");
         }
 
-        // 2. メンション取得
+        // --- メンション返信 ---
         let mentions = [];
         try {
             mentions = await mk.request('notes/mentions', { limit: 10 });
