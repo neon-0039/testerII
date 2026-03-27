@@ -66,24 +66,27 @@ async function main() {
             console.log("フォロバ処理スキップ。");
         }
 
-        // --- 2. メンション取得・返信 ---
+// --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
         try {
-            const mentions = await mk.request('notes/mentions', { limit: 5 });
-            let replyCount=0;
+            // 少し多めに取得して、その中から未返信の最新4件を探す
+            const mentions = await mk.request('notes/mentions', { limit: 10 });
+            let replyCount = 0;
+
             for (const note of mentions) {
-                // 【制限】4つ返信したらループを抜ける
+                // 4つ返信したら終了
                 if (replyCount >= 4) break;
-                // 自分自身や他のBot、または既に返信済みのノートはスルー
+
+                // 自分、Bot、または既に返信済み(myReplyId)ならスキップ
                 if (note.user.isBot || note.user.id === me.id || note.myReplyId) {
                     continue;
                 }
 
-                // メンション部分を除去して中身を取り出す
+                // メンション部分を除去
                 let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
                 if (!user_input) continue;
 
-                console.log(`${note.user.username} さんからのメンションを処理中...`);
+                console.log(`${note.user.username} さんからのメンションを処理中... (${replyCount + 1}/4)`);
 
                 // Geminiに返信を考えてもらう
                 const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。`;
@@ -94,13 +97,13 @@ async function main() {
                     text: reply_text.trim().slice(0, 120),
                     replyId: note.id,
                     visibility: 'home' 
-                    
                 });
                 
                 console.log(`${note.user.username} さんに返信しました。`);
                 
-                // 連投制限対策で25秒待つ
-                replyCount++
+                // カウントを増やして、25秒待機（429エラー対策）
+                replyCount++;
+                console.log("API制限回避のため25秒待機します...");
                 await sleep(25000);
             }
         } catch (e) {
@@ -124,7 +127,7 @@ async function main() {
             - 多少支離滅裂になってしまっても問題ありませんので、観測した投稿の語彙を9割以上使用してください。
             - 特定の人の話題の時は、その人の名前を明記してください。ただし、メンションは行わないこと。
             - "@Sakuran@misskey.day"というユーザーへの二人称は「マイクリエイター」とすること。
-            - "足立レイ"、"九十九シオン"というキャラクター名の2人は先輩と呼ぶこと。
+            - "足立レイ"、"九十九シオン"というキャラクター名の2人のうちどちらかもしくは両方が話題に上がった時、2人のことは先輩と呼ぶこと。
             `;
 
             const post_content = await askGemini(prompt);
