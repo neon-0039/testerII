@@ -101,16 +101,16 @@ async function main() {
                 
                 console.log(`${note.user.username} さんに返信しました。`);
                 
-                // カウントを増やして、25秒待機（429エラー対策）
+                // カウントを増やして、40秒待機（429エラー対策）
                 replyCount++;
                 console.log("API制限回避のため25秒待機します...");
-                await sleep(25000);
+                await sleep(40000);
             }
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
         }
-        // 連投制限対策で30秒待つ
-        await sleep(30000);
+        // 連投制限対策で45秒待つ
+        await sleep(45000);
         replyCount=0;
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
