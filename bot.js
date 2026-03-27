@@ -9,7 +9,7 @@ const config = {
     characterSetting: "好きに回答してください"
 };
 
-// 1. Misskeyクライアント初期化
+// 1. Misskeyクライアント初期化 (認証エラー修正済み)
 const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
@@ -18,7 +18,8 @@ const mk = new misskey.api.APIClient({
 // 2. Gemini初期化
 const genAI = new GoogleGenerativeAI(config.geminiKey);
 
-// 【修正】apiVersionを'v1'に固定し、modelから'models/'を完全に除去します
+// 【重要】404回避のため apiVersion を 'v1' に固定
+// かつモデル名に 'models/' が含まれていないことを確認
 const model = genAI.getGenerativeModel(
     { model: "gemini-1.5-flash" }, 
     { apiVersion: 'v1' }
