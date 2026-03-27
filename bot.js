@@ -19,7 +19,7 @@ const mk = new misskey.api.APIClient({
  */
 async function askGemini(prompt) {
     // 【修正】APIバージョンを v1（安定版）に変更し、モデル名を公式ドキュメントに厳密に合わせました
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${config.geminiKey}`;
     
     const payload = {
         contents: [{
