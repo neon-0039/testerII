@@ -102,6 +102,8 @@ async function main() {
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
         }
+        // 連投制限対策で2秒待つ
+        await sleep(10000);
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
