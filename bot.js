@@ -86,7 +86,7 @@ async function main() {
             
             await mk.request('notes/create', {
                 text: reply_text.trim().slice(0, 75),
-                replyId: note.id
+                replyId: note.id,
                 visibility: 'home' // 【追加】返信もホーム公開に固定
             });
             console.log(`Replied to ${note.user.username}`);
@@ -97,7 +97,6 @@ async function main() {
         try {
             const tl = await mk.request('notes/timeline', { limit: 20 });
             const tl_text = tl.map(n => n.text).filter(t => t).join("\n");
-            visibility: 'home' // 【追加】返信もホーム公開に固定
             const prompt = `
             ${config.characterSetting}
             【タイムラインの内容】
@@ -109,8 +108,11 @@ async function main() {
 
             const post_content = await askGemini(prompt);
 
-            await mk.request('notes/create', { text: post_content.trim().slice(0, 75) });
-            console.log(`Posted: ${post_content}`);
+            // --- 3. 独り言の投稿の箇所 ---
+            await mk.request('notes/create', { 
+                text: post_content.trim().slice(0, 75),
+                visibility: 'home' // 【追加】独り言をホーム公開（フォロワー限定に近い状態）に固定
+            });
 
         } catch (e) {
             console.log(`投稿生成エラー: ${e.message}`);
