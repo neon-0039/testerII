@@ -44,6 +44,11 @@ async function askGemini(prompt) {
 }
 
 async function main() {
+    async function debugModels() {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
+        const res = await axios.get(url);
+        console.log("利用可能なモデル一覧:", res.data.models.map(m => m.name));
+    }
     try {
         const me = await mk.request('i');
         const my_id = me.id;
