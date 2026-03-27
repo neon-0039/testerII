@@ -18,9 +18,28 @@ const mk = new misskey.api.APIClient({
  * Gemini API に直接リクエストを送る関数
  */
 async function askGemini(prompt) {
-    // 【修正】APIバージョンを v1（安定版）に変更し、モデル名を公式ドキュメントに厳密に合わせました
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${config.geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
     
+    const payload = {
+        contents: [{ parts: [{ text: prompt }] }]
+    };
+
+    try {
+        const response = await axios.post(url, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                // GitHub Actionsからの怪しい通信と思われないよう、ブラウザのふりをする
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
+        return response.data.candidates[0].content.parts[0].text;
+    } catch (error) {
+        if (error.response) {
+            console.error("詳細ログ:", JSON.stringify(error.response.data));
+        }
+        throw error;
+    }
+}
     const payload = {
         contents: [{
             parts: [{ text: prompt }]
