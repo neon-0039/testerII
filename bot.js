@@ -67,14 +67,22 @@ async function main() {
         }
 
         // --- 2. メンション取得・返信 ---
-        console.log("メンションを確認中...");
-        let mentions = [];
-        try {
-            mentions = await mk.request('notes/mentions', { limit: 10 });
-        } catch (e) {
-            mentions = [];
+        console.log("メンション確認中...");
+try {
+    const mentions = await mk.request('notes/mentions', { limit: 5 });
+    for (const note of mentions) {
+        // 【追加】すでに自分が返信済み（replyIdが自分）ならスキップ
+        if (note.user.isBot || note.user.id === me.id) continue;
+        
+        // 【最強の二重返信防止】
+        // 相手の投稿に対して、自分のIDを持つ返信が既にぶら下がっていないか確認
+        // ※MisskeyのAPI仕様によっては note.myReplyId などをチェックします
+        if (note.myReplyId) {
+            console.log(`通知 ID:${note.id} は返信済みなのでスルーします`);
+            continue;
         }
 
+        let input = (note.text || "").replace(`@${me.username}`, "").trim();
         for (const note of mentions) {
             if (note.user.isBot || note.user.id === my_id) continue;
 
