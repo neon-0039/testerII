@@ -8,18 +8,14 @@ const config = {
     characterSetting: "好きに回答してください"
 };
 
-// Misskey初期化
 const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
 });
 
-/**
- * Gemini API 2.0 を直接叩く関数
- */
 async function askGemini(prompt) {
-    // 【変更点】モデルを 2.0 Flash に変更。URLも一番通りやすい形式に固定。
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.geminiKey}`;
+    // 【修正】2.0が制限されているため、確実に枠がある 1.5-flash を「成功したURL形式」で叩きます
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
     
     const payload = {
         contents: [{
@@ -29,10 +25,8 @@ async function askGemini(prompt) {
 
     try {
         const response = await axios.post(url, payload);
-        // レスポンスからテキストを抽出
         return response.data.candidates[0].content.parts[0].text;
     } catch (error) {
-        // 詳細なエラーをログに出して、何が起きているか把握できるようにします
         if (error.response) {
             console.error("Gemini API Error Detail:", JSON.stringify(error.response.data));
         }
@@ -45,6 +39,7 @@ async function main() {
         const me = await mk.request('i');
         const my_id = me.id;
         const my_username = me.username;
+        console.log(`Logged in as: @${my_username}`);
 
         // --- 1. 自動フォロバ処理 ---
         console.log("未フォローのフォロワーを確認中...");
@@ -73,12 +68,10 @@ async function main() {
         for (const note of mentions) {
             if (note.user.isBot || note.user.id === my_id) continue;
 
-            let user_input = note.text || "";
-            user_input = user_input.replace(`@${my_username}`, "").trim();
+            let user_input = (note.text || "").replace(`@${my_username}`, "").trim();
             if (!user_input) continue;
 
             const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して75文字以内で返信してください。`;
-            
             const reply_text = await askGemini(reply_prompt);
             
             await mk.request('notes/create', {
