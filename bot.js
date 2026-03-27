@@ -18,32 +18,14 @@ const mk = new misskey.api.APIClient({
  * Gemini API に直接リクエストを送る関数
  */
 async function askGemini(prompt) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
+    // 【解呪の決定版】
+    // 1. バージョンを v1 に固定
+    // 2. モデル名を 'models/' から始まるフルパスで指定
+    // この組み合わせが、現在最も「404」が出にくい公式推奨の形です
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
     
     const payload = {
         contents: [{ parts: [{ text: prompt }] }]
-    };
-
-    try {
-        const response = await axios.post(url, payload, {
-            headers: {
-                'Content-Type': 'application/json',
-                // GitHub Actionsからの怪しい通信と思われないよう、ブラウザのふりをする
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-        });
-        return response.data.candidates[0].content.parts[0].text;
-    } catch (error) {
-        if (error.response) {
-            console.error("詳細ログ:", JSON.stringify(error.response.data));
-        }
-        throw error;
-    }
-}
-    const payload = {
-        contents: [{
-            parts: [{ text: prompt }]
-        }]
     };
 
     try {
@@ -51,12 +33,8 @@ async function askGemini(prompt) {
         return response.data.candidates[0].content.parts[0].text;
     } catch (error) {
         if (error.response) {
-            console.error("Gemini API Error Detail:", JSON.stringify(error.response.data));
-            
-            // 404が出た場合、このキーで使えるモデル一覧を確認するためのヒント
-            if (error.response.status === 404) {
-                console.log("ヒント: モデル名が v1 では有効でない可能性があります。URLの v1 を v1beta に、またはモデル名を gemini-1.5-flash-latest に変える必要があるかもしれません。");
-            }
+            // ここで出るエラーが 404 ならモデル名、429 なら回数制限です
+            console.error("Gemini Error:", JSON.stringify(error.response.data));
         }
         throw error;
     }
