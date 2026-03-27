@@ -70,7 +70,7 @@ async function main() {
         console.log("メンション確認中...");
         try {
             const mentions = await mk.request('notes/mentions', { limit: 5 });
-            
+            let replyCount=0;
             for (const note of mentions) {
                 // 【制限】4つ返信したらループを抜ける
                 if (replyCount >= 4) break;
@@ -94,11 +94,13 @@ async function main() {
                     text: reply_text.trim().slice(0, 120),
                     replyId: note.id,
                     visibility: 'home' 
+                    
                 });
                 
                 console.log(`${note.user.username} さんに返信しました。`);
                 
                 // 連投制限対策で25秒待つ
+                replyCount++
                 await sleep(25000);
             }
         } catch (e) {
@@ -106,6 +108,7 @@ async function main() {
         }
         // 連投制限対策で30秒待つ
         await sleep(30000);
+        replyCount=0;
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
