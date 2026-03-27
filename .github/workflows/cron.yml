@@ -9,16 +9,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # cache: 'npm'  ← ここを削除しました
+          # キャッシュエラーを避けるため、一旦キャッシュ設定はなしでいきます
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install misskey-js@latest @google/generative-ai@latest
 
       - name: Run bot
         env:
