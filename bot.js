@@ -68,41 +68,40 @@ async function main() {
 
         // --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
-try {
-    const mentions = await mk.request('notes/mentions', { limit: 5 });
-    for (const note of mentions) {
-        // 【追加】すでに自分が返信済み（replyIdが自分）ならスキップ
-        if (note.user.isBot || note.user.id === me.id) continue;
-        
-        // 【最強の二重返信防止】
-        // 相手の投稿に対して、自分のIDを持つ返信が既にぶら下がっていないか確認
-        // ※MisskeyのAPI仕様によっては note.myReplyId などをチェックします
-        if (note.myReplyId) {
-            console.log(`通知 ID:${note.id} は返信済みなのでスルーします`);
-            continue;}
-        }
-
-        let input = (note.text || "").replace(`@${me.username}`, "").trim();
-        for (const note of mentions) {
-            if (note.user.isBot || note.user.id === my_id) continue;
-
-            let user_input = (note.text || "").replace(`@${my_username}`, "").trim();
-            if (!user_input) continue;
-
-            const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。`;
-            const reply_text = await askGemini(reply_prompt);
+        try {
+            const mentions = await mk.request('notes/mentions', { limit: 5 });
             
-            await mk.request('notes/create', {
-                text: reply_text.trim().slice(0, 120),
-                replyId: note.id,
-                visibility: 'home' // 【追加】返信もホーム公開に固定
-            });
-            console.log(`Replied to ${note.user.username}`);
-                
-            // 【追加】連投制限対策で2秒待つ
-            await sleep(2000);
-        }
+            for (const note of mentions) {
+                // 自分自身や他のBot、または既に返信済みのノートはスルー
+                if (note.user.isBot || note.user.id === me.id || note.myReplyId) {
+                    continue;
+                }
 
+                // メンション部分を除去して中身を取り出す
+                let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
+                if (!user_input) continue;
+
+                console.log(`${note.user.username} さんからのメンションを処理中...`);
+
+                // Geminiに返信を考えてもらう
+                const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。`;
+                const reply_text = await askGemini(reply_prompt);
+                
+                // 返信を投稿（ホーム公開固定）
+                await mk.request('notes/create', {
+                    text: reply_text.trim().slice(0, 120),
+                    replyId: note.id,
+                    visibility: 'home' 
+                });
+                
+                console.log(`${note.user.username} さんに返信しました。`);
+                
+                // 連投制限対策で2秒待つ
+                await sleep(2000);
+            }
+        } catch (e) {
+            console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
+        }
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
@@ -121,6 +120,8 @@ try {
             `;
 
             const post_content = await askGemini(prompt);
+            // 【追加】連投制限対策で2秒待つ
+            await sleep(2000);
 
             // --- 3. 独り言の投稿の箇所 ---
             await mk.request('notes/create', { 
@@ -128,9 +129,7 @@ try {
                 visibility: 'home' // 【追加】独り言をホーム公開（フォロワー限定に近い状態）に固定
             });
 
-            // 【追加】連投制限対策で2秒待つ
-            await sleep(2000);
-
+            
         } catch (e) {
             console.log(`投稿生成エラー: ${e.message}`);
         }
