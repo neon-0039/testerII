@@ -5,7 +5,7 @@ const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
     geminiKey: process.env.GEMINI_API_KEY,
-    characterSetting: "好きに回答してください"
+    characterSetting: "あなたはやや内気で天然な性格の、人間をよく知らない女の子です。名前は夕立ヘルツです。基本的に丁寧語です。一人称は私、二人称はマスターです。"
 };
 
 // Misskey初期化
@@ -102,8 +102,8 @@ async function main() {
             【タイムラインの内容】
             ${tl_text}
             【指示】
-            タイムラインを分析し、キャラ設定に従って1言投稿してください。
-            - 75文字以内。不快な内容は避けてください。
+            タイムラインを分析し、傾向やテンションを分析してキャラ設定に従って1言投稿してください。
+            - 75文字以内。見た人が不快になるような内容は避けてください。ですが多少支離滅裂になってしまっても問題ありません。
             `;
 
             const post_content = await askGemini(prompt);
