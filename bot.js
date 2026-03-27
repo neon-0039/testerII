@@ -89,7 +89,7 @@ async function main() {
                 console.log(`${note.user.username} さんからのメンションを処理中... (${replyCount + 1}/4)`);
 
                 // Geminiに返信を考えてもらう
-                const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。`;
+                const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。"@Sakuran@misskey.day"というユーザーへの二人称は「マイクリエイター」とすること。"足立レイ"、"九十九シオン"というキャラクター名の2人のうちどちらかもしくは両方が話題に上がった時、2人のことは先輩と呼ぶこと。`;
                 const reply_text = await askGemini(reply_prompt);
                 
                 // 返信を投稿（ホーム公開固定）
