@@ -9,7 +9,7 @@ const config = {
     characterSetting: "好きに回答してください"
 };
 
-// 1. Misskeyクライアント初期化 (認証エラー修正済み)
+// 1. Misskeyクライアント初期化
 const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
@@ -18,8 +18,8 @@ const mk = new misskey.api.APIClient({
 // 2. Gemini初期化
 const genAI = new GoogleGenerativeAI(config.geminiKey);
 
-// 【重要】404回避のため apiVersion を 'v1' に固定
-// かつモデル名に 'models/' が含まれていないことを確認
+// 【最重要】404エラーを物理的に回避する設定
+// apiVersionを'v1'に固定し、model名から余計な文字を排除します
 const model = genAI.getGenerativeModel(
     { model: "gemini-1.5-flash" }, 
     { apiVersion: 'v1' }
@@ -30,13 +30,15 @@ async function main() {
         const me = await mk.request('i');
         const my_id = me.id;
         const my_username = me.username;
+        console.log(`Logged in as: @${my_username}`);
 
         // --- 自動フォロバ処理 ---
         console.log("未フォローのフォロワーを確認中...");
         try {
-            const followers = await mk.request('users/followers', { userId: my_id, limit: 10 });
+            const followers = await mk.request('users/followers', { userId: my_id, limit: 20 });
             for (const f of followers) {
                 const target = f.follower;
+                // まだフォローしておらず、Botでもないユーザーをフォロバ
                 if (target && !target.isFollowing && !target.isBot && target.id !== my_id) {
                     await mk.request('following/create', { userId: target.id })
                         .then(() => console.log(`Followed back: ${target.username}`))
@@ -44,7 +46,7 @@ async function main() {
                 }
             }
         } catch (e) {
-            console.log("フォロバ処理スキップ。");
+            console.log("フォロバ処理でエラー（スキップします）");
         }
 
         // --- メンション返信 ---
@@ -64,6 +66,7 @@ async function main() {
             if (!user_input) continue;
 
             const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して75文字以内で返信してください。`;
+            
             const result = await model.generateContent(reply_prompt);
             const response = await result.response;
             const reply_text = response.text().trim().slice(0, 75);
@@ -75,13 +78,8 @@ async function main() {
             console.log(`Replied to ${note.user.username}`);
         }
 
-    } catch (e) {
-        console.log(`リプライエラー。: ${e.message}`);
-    }
-
-    // --- 独り言の処理 ---
-    console.log("投稿を生成中です...");
-    try {
+        // --- 独り言の処理 ---
+        console.log("投稿を生成中です...");
         const tl = await mk.request('notes/timeline', { limit: 20 });
         const tl_text = tl.map(n => n.text).filter(t => t).join("\n");
 
@@ -102,7 +100,7 @@ async function main() {
         console.log(`Posted: ${post_content}`);
 
     } catch (e) {
-        console.log(`投稿エラー。早急に対処お願いします: ${e.message}`);
+        console.log(`エラーが発生しました: ${e.message}`);
     }
 }
 
