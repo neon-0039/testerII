@@ -79,7 +79,7 @@ try {
         // ※MisskeyのAPI仕様によっては note.myReplyId などをチェックします
         if (note.myReplyId) {
             console.log(`通知 ID:${note.id} は返信済みなのでスルーします`);
-            continue;
+            continue;}
         }
 
         let input = (note.text || "").replace(`@${me.username}`, "").trim();
