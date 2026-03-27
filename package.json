@@ -1,8 +1,9 @@
 {
   "name": "misskey-gemini-bot",
   "version": "1.0.0",
+  "main": "bot.js",
   "dependencies": {
     "misskey-js": "latest",
-    "@google/generative-ai": "latest"
+    "axios": "latest"
   }
 }
