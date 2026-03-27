@@ -87,6 +87,7 @@ async function main() {
             await mk.request('notes/create', {
                 text: reply_text.trim().slice(0, 75),
                 replyId: note.id
+                visibility: 'home' // 【追加】返信もホーム公開に固定
             });
             console.log(`Replied to ${note.user.username}`);
         }
@@ -96,7 +97,7 @@ async function main() {
         try {
             const tl = await mk.request('notes/timeline', { limit: 20 });
             const tl_text = tl.map(n => n.text).filter(t => t).join("\n");
-
+            visibility: 'home' // 【追加】返信もホーム公開に固定
             const prompt = `
             ${config.characterSetting}
             【タイムラインの内容】
