@@ -1,0 +1,36 @@
+name: Misskey Bot JS Cron
+
+# 実行のタイミング設定
+on:
+  schedule:
+    # 毎時59分に実行（UTC基準なので、日本時間の毎時49〜59分ごろに動くことが多いです）
+    - cron: '59 * * * *'
+  workflow_dispatch: # 手動実行ボタンを表示させる設定
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. コードをチェックアウト（最新のv4を使用）
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Node.jsの環境セットアップ（最新のv4を使用）
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # 現在の安定版
+          cache: 'npm'
+
+      # 3. ライブラリのインストール
+      - name: Install dependencies
+        run: npm install
+
+      # 4. ボットの実行
+      - name: Run bot
+        env:
+          # GitHubのSettings > Secrets > Actions に登録した名前と一致させる
+          MK_DOMAIN: ${{ secrets.MK_DOMAIN }}
+          MK_TOKEN: ${{ secrets.MK_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node bot.js
