@@ -1,55 +1,64 @@
 const misskey = require('misskey-js');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const axios = require('axios');
 
-// 環境変数
+// 環境変数から設定を読み込み
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
     geminiKey: process.env.GEMINI_API_KEY,
-    characterSetting: "好きに回答してください"
+    characterSetting: "好きに回答してください" // CHARACTER_SETTING
 };
 
-// 1. Misskeyクライアント初期化
+// Misskey初期化 (認証エラー回避版)
 const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
 });
 
-// 2. Gemini初期化
-const genAI = new GoogleGenerativeAI(config.geminiKey);
+/**
+ * Gemini APIに直接POSTリクエストを送る関数
+ * 404回避のため、URLを完全に固定しています
+ */
+async function askGemini(prompt) {
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
+    
+    const payload = {
+        contents: [{
+            parts: [{ text: prompt }]
+        }]
+    };
 
-// 【最重要】404エラーを物理的に回避する設定
-// apiVersionを'v1'に固定し、model名から余計な文字を排除します
-const model = genAI.getGenerativeModel(
-    { model: "gemini-1.5-flash" }, 
-    { apiVersion: 'v1' }
-);
+    const response = await axios.post(url, payload, {
+        headers: { 'Content-Type': 'application/json' }
+    });
+
+    // 生成されたテキストを抽出
+    return response.data.candidates[0].content.parts[0].text;
+}
 
 async function main() {
     try {
+        // 1. 自分の情報を取得
         const me = await mk.request('i');
         const my_id = me.id;
         const my_username = me.username;
-        console.log(`Logged in as: @${my_username}`);
 
         // --- 自動フォロバ処理 ---
         console.log("未フォローのフォロワーを確認中...");
         try {
-            const followers = await mk.request('users/followers', { userId: my_id, limit: 20 });
+            const followers = await mk.request('users/followers', { userId: my_id, limit: 10 });
             for (const f of followers) {
                 const target = f.follower;
-                // まだフォローしておらず、Botでもないユーザーをフォロバ
                 if (target && !target.isFollowing && !target.isBot && target.id !== my_id) {
-                    await mk.request('following/create', { userId: target.id })
-                        .then(() => console.log(`Followed back: ${target.username}`))
-                        .catch(() => {});
+                    await mk.request('following/create', { userId: target.id });
+                    console.log(`Followed back: ${target.username}`);
                 }
             }
         } catch (e) {
-            console.log("フォロバ処理でエラー（スキップします）");
+            console.log("フォロバ処理スキップ。");
         }
 
-        // --- メンション返信 ---
+        // --- メンション取得 & 返信 ---
         console.log("メンションを確認中...");
         let mentions = [];
         try {
@@ -65,24 +74,32 @@ async function main() {
             user_input = user_input.replace(`@${my_username}`, "").trim();
             if (!user_input) continue;
 
+            // Python版と同じプロンプト
             const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して75文字以内で返信してください。`;
             
-            const result = await model.generateContent(reply_prompt);
-            const response = await result.response;
-            const reply_text = response.text().trim().slice(0, 75);
+            const reply_text = await askGemini(reply_prompt);
+            const final_reply = reply_text.trim().slice(0, 75);
 
             await mk.request('notes/create', {
-                text: reply_text,
+                text: final_reply,
                 replyId: note.id
             });
             console.log(`Replied to ${note.user.username}`);
         }
 
-        // --- 独り言の処理 ---
-        console.log("投稿を生成中です...");
+    } catch (e) {
+        console.log(`リプライエラー。: ${e.message}`);
+        if (e.response) console.log("詳細:", JSON.stringify(e.response.data));
+    }
+
+    // --- 独り言の処理 ---
+    console.log("投稿を生成中です...");
+    try {
+        // タイムライン取得
         const tl = await mk.request('notes/timeline', { limit: 20 });
         const tl_text = tl.map(n => n.text).filter(t => t).join("\n");
 
+        // Python版と同じプロンプト
         const prompt = `
         ${config.characterSetting}
         【タイムラインの内容】
@@ -92,15 +109,15 @@ async function main() {
         - 75文字以内。相手が不快になるような内容は避けてください。
         `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const post_content = response.text().trim().slice(0, 75);
+        const post_raw = await askGemini(prompt);
+        const post_content = post_raw.trim().slice(0, 75);
 
         await mk.request('notes/create', { text: post_content });
         console.log(`Posted: ${post_content}`);
 
     } catch (e) {
-        console.log(`エラーが発生しました: ${e.message}`);
+        console.log(`投稿エラー。早急に対処お願いします: ${e.message}`);
+        if (e.response) console.log("詳細:", JSON.stringify(e.response.data));
     }
 }
 
