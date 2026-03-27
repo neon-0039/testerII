@@ -9,17 +9,19 @@ const config = {
     characterSetting: "好きに回答してください"
 };
 
-// 1. Misskeyクライアント初期化 (認証エラー修正済み)
+// 1. Misskeyクライアント初期化
 const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
 });
 
-// 2. Gemini初期化 (APIバージョンを 'v1' に固定)
+// 2. Gemini初期化
 const genAI = new GoogleGenerativeAI(config.geminiKey);
+
+// 【修正】apiVersionを'v1'に固定し、modelから'models/'を完全に除去します
 const model = genAI.getGenerativeModel(
-    { model: "gemini-1.5-flash" },
-    { apiVersion: 'v1' } // ここを追加して v1beta 回避！
+    { model: "gemini-1.5-flash" }, 
+    { apiVersion: 'v1' }
 );
 
 async function main() {
@@ -45,6 +47,7 @@ async function main() {
         }
 
         // --- メンション返信 ---
+        console.log("メンションを確認中...");
         let mentions = [];
         try {
             mentions = await mk.request('notes/mentions', { limit: 10 });
