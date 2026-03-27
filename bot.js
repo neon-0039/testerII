@@ -96,8 +96,8 @@ async function main() {
                 
                 console.log(`${note.user.username} さんに返信しました。`);
                 
-                // 連投制限対策で2秒待つ
-                await sleep(2000);
+                // 連投制限対策で7.5秒待つ
+                await sleep(7500);
             }
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
@@ -123,8 +123,8 @@ async function main() {
             `;
 
             const post_content = await askGemini(prompt);
-            // 【追加】連投制限対策で2秒待つ
-            await sleep(2000);
+            // 【追加】連投制限対策で7.5秒待つ
+            await sleep(7500);
 
             // --- 3. 独り言の投稿の箇所 ---
             await mk.request('notes/create', { 
