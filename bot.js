@@ -14,18 +14,30 @@ const mk = new misskey.api.APIClient({
     credential: config.token
 });
 
-// Gemini APIに直接リクエストを送る関数
+/**
+ * Gemini API 2.0 を直接叩く関数
+ */
 async function askGemini(prompt) {
-    // 【修正】無料枠で最も安定して通る v1beta のフルパスに固定します
+    // 【変更点】モデルを 2.0 Flash に変更。URLも一番通りやすい形式に固定。
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.geminiKey}`;
     
     const payload = {
-        contents: [{ parts: [{ text: prompt }] }]
+        contents: [{
+            parts: [{ text: prompt }]
+        }]
     };
 
-    // 成功するまでURLを固定して叩きます
-    const response = await axios.post(url, payload);
-    return response.data.candidates[0].content.parts[0].text;
+    try {
+        const response = await axios.post(url, payload);
+        // レスポンスからテキストを抽出
+        return response.data.candidates[0].content.parts[0].text;
+    } catch (error) {
+        // 詳細なエラーをログに出して、何が起きているか把握できるようにします
+        if (error.response) {
+            console.error("Gemini API Error Detail:", JSON.stringify(error.response.data));
+        }
+        throw error;
+    }
 }
 
 async function main() {
