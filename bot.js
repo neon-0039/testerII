@@ -1,7 +1,7 @@
 const misskey = require('misskey-js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// 環境変数から設定を読み込み
+// 環境変数
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
@@ -9,8 +9,12 @@ const config = {
     characterSetting: "好きに回答してください"
 };
 
-// 初期化（APIClientの呼び出し方を修正）
-const mk = new misskey.api.APIClient({ origin: `https://${config.domain}`, i: config.token });
+// 初期化（認証情報を credential として渡す形式に修正）
+const mk = new misskey.api.APIClient({
+    origin: `https://${config.domain}`,
+    credential: config.token // ここを i から credential に変更
+});
+
 const genAI = new GoogleGenerativeAI(config.geminiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -23,14 +27,19 @@ async function main() {
 
         // --- 自動フォロバ処理 ---
         console.log("未フォローのフォロワーを確認中...");
-        const followers = await mk.request('users/followers', { userId: my_id, limit: 20 });
-        for (const follower of followers) {
-            // まだフォローしていない相手をフォローバック
-            if (!follower.follower.isFollowing && !follower.follower.isBot) {
-                await mk.request('following/create', { userId: follower.followerId })
-                    .then(() => console.log(`Followed back: ${follower.follower.username}`))
-                    .catch(e => console.log(`Follow error: ${e.message}`));
+        try {
+            const followers = await mk.request('users/followers', { userId: my_id, limit: 10 });
+            for (const f of followers) {
+                // follower.follower が存在し、自分がフォローしていない場合
+                const target = f.follower;
+                if (target && !target.isFollowing && !target.isBot && target.id !== my_id) {
+                    await mk.request('following/create', { userId: target.id })
+                        .then(() => console.log(`Followed back: ${target.username}`))
+                        .catch(() => {});
+                }
             }
+        } catch (e) {
+            console.log("フォロバ処理スキップ。");
         }
 
         // 2. メンション取得
