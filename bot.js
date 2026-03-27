@@ -81,11 +81,11 @@ async function main() {
             let user_input = (note.text || "").replace(`@${my_username}`, "").trim();
             if (!user_input) continue;
 
-            const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して75文字以内で返信してください。`;
+            const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。`;
             const reply_text = await askGemini(reply_prompt);
             
             await mk.request('notes/create', {
-                text: reply_text.trim().slice(0, 75),
+                text: reply_text.trim().slice(0, 120),
                 replyId: note.id,
                 visibility: 'home' // 【追加】返信もホーム公開に固定
             });
@@ -103,14 +103,14 @@ async function main() {
             ${tl_text}
             【指示】
             タイムラインを分析し、傾向やテンションを分析してキャラ設定に従って1言投稿してください。
-            - 75文字以内。見た人が不快になるような内容は避けてください。ですが多少支離滅裂になってしまっても問題ありません。特定の人の話題の時は、その人の名前を明記してください。
+            - 100文字以内。見た人が不快になるような内容は避けてください。ですが多少支離滅裂になってしまっても問題ありません。特定の人の話題の時は、その人の名前を明記してください。
             `;
 
             const post_content = await askGemini(prompt);
 
             // --- 3. 独り言の投稿の箇所 ---
             await mk.request('notes/create', { 
-                text: post_content.trim().slice(0, 75),
+                text: post_content.trim().slice(0, 150),
                 visibility: 'home' // 【追加】独り言をホーム公開（フォロワー限定に近い状態）に固定
             });
 
