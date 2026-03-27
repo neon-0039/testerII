@@ -16,14 +16,14 @@ const mk = new misskey.api.APIClient({
 
 // Gemini APIに直接リクエストを送る関数
 async function askGemini(prompt) {
-    // 【修正箇所】モデル名を gemini-1.5-flash-latest に変更し、確実に v1 で呼び出します
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${config.geminiKey}`;
+    // 【修正】無料枠で最も安定して通る v1beta のフルパスに固定します
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
     
     const payload = {
         contents: [{ parts: [{ text: prompt }] }]
     };
 
-    // 以前の 404 エラーを回避するため、成功するまで直接叩きます
+    // 成功するまでURLを固定して叩きます
     const response = await axios.post(url, payload);
     return response.data.candidates[0].content.parts[0].text;
 }
