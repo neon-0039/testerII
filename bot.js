@@ -90,6 +90,9 @@ async function main() {
                 visibility: 'home' // 【追加】返信もホーム公開に固定
             });
             console.log(`Replied to ${note.user.username}`);
+                
+            // 【追加】連投制限対策で2秒待つ
+            await sleep(2000);
         }
 
         // --- 3. 独り言の処理 ---
@@ -113,6 +116,9 @@ async function main() {
                 text: post_content.trim().slice(0, 150),
                 visibility: 'home' // 【追加】独り言をホーム公開（フォロワー限定に近い状態）に固定
             });
+
+            // 【追加】連投制限対策で2秒待つ
+            await sleep(2000);
 
         } catch (e) {
             console.log(`投稿生成エラー: ${e.message}`);
