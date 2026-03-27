@@ -18,10 +18,8 @@ const mk = new misskey.api.APIClient({
  * Gemini API に直接リクエストを送る関数
  */
 async function askGemini(prompt) {
-    // 【修正ポイント】
-    // 404エラーを回避するため、モデル名を 'models/gemini-1.5-flash' という完全な形式で記述します。
-    // URLの構造を Google の最新ドキュメントに厳密に合わせました。
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
+    // 【修正】APIバージョンを v1（安定版）に変更し、モデル名を公式ドキュメントに厳密に合わせました
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${config.geminiKey}`;
     
     const payload = {
         contents: [{
@@ -31,14 +29,15 @@ async function askGemini(prompt) {
 
     try {
         const response = await axios.post(url, payload);
-        // レスポンスから生成テキストを取得
         return response.data.candidates[0].content.parts[0].text;
     } catch (error) {
         if (error.response) {
-            // エラーの詳細をログに出力
             console.error("Gemini API Error Detail:", JSON.stringify(error.response.data));
             
-            // もしこれでも 404 なら、モデル名を 'gemini-1.5-flash-latest' に変えて再試行する価値があります
+            // 404が出た場合、このキーで使えるモデル一覧を確認するためのヒント
+            if (error.response.status === 404) {
+                console.log("ヒント: モデル名が v1 では有効でない可能性があります。URLの v1 を v1beta に、またはモデル名を gemini-1.5-flash-latest に変える必要があるかもしれません。");
+            }
         }
         throw error;
     }
@@ -60,11 +59,11 @@ async function main() {
                 if (target && !target.isFollowing && !target.isBot && target.id !== my_id) {
                     await mk.request('following/create', { userId: target.id })
                         .then(() => console.log(`Followed back: ${target.username}`))
-                        .catch(e => console.log(`Follow back failed for ${target.username}: ${e.message}`));
+                        .catch(e => console.log(`Follow back failed: ${e.message}`));
                 }
             }
         } catch (e) {
-            console.log("フォロバ処理中にエラーが発生しました（スキップします）");
+            console.log("フォロバ処理スキップ。");
         }
 
         // --- 2. メンション取得・返信 ---
@@ -104,7 +103,7 @@ async function main() {
             ${tl_text}
             【指示】
             タイムラインを分析し、キャラ設定に従って1言投稿してください。
-            - 75文字以内。相手が不快になるような内容は避けてください。
+            - 75文字以内。不快な内容は避けてください。
             `;
 
             const post_content = await askGemini(prompt);
@@ -117,7 +116,7 @@ async function main() {
         }
 
     } catch (e) {
-        console.log(`全体処理エラー: ${e.message}`);
+        console.log(`全体エラー: ${e.message}`);
     }
 }
 
