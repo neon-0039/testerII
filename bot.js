@@ -1,6 +1,6 @@
 const misskey = require('misskey-js');
 const axios = require('axios');
-
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
