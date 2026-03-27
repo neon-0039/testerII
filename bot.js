@@ -1,12 +1,12 @@
 const { APIClient } = require('misskey-js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// 環境変数の読み込み
+// 環境変数から設定を読み込み
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
     geminiKey: process.env.GEMINI_API_KEY,
-    charSetting: "好きに回答してください" // Python版のCHARACTER_SETTING
+    characterSetting: "好きに回答してください" // CHARACTER_SETTING
 };
 
 // 初期化
@@ -18,77 +18,76 @@ async function main() {
     try {
         // 1. 自分の情報を取得
         const me = await mk.request('i');
-        const myId = me.id;
-        const myUsername = me.username;
+        const my_id = me.id;
+        const my_username = me.username;
 
         // 2. メンション取得
-        console.log("メンションを確認中...");
         let mentions = [];
         try {
             mentions = await mk.request('notes/mentions', { limit: 10 });
         } catch (e) {
-            console.log(`メンション取得スキップ: ${e.message}`);
+            // エラー時は空リストで続行
+            mentions = [];
         }
 
         for (const note of mentions) {
-            // ボットまたは自分自身は除外
-            if (note.user.isBot || note.userId === myId) continue;
+            // ボット除外
+            if (note.user.isBot || note.user.id === my_id) {
+                continue;
+            }
 
-            let userInput = note.text || "";
-            if (!userInput) continue;
+            // AIへの入力（メンション部分を除去）
+            let user_input = note.text || "";
+            user_input = user_input.replace(`@${my_username}`, "").trim();
+            if (!user_input) {
+                continue;
+            }
 
-            // メンション部分を除去
-            userInput = userInput.replace(`@${myUsername}`, "").trim();
-
-            const replyPrompt = `${config.charSetting}\n相手の言葉: ${userInput}\nこれに対して75文字以内で返信してください。`;
-
-            // AI返信生成
-            const result = await model.generateContent(replyPrompt);
+            // Geminiで返信内容を生成 (文言をPython版に統一)
+            const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して75文字以内で返信してください。`;
+            const result = await model.generateContent(reply_prompt);
             const response = await result.response;
-            const replyText = response.text().trim().slice(0, 75);
+            const reply_text = response.text().trim().slice(0, 75);
 
-            // Misskeyにリプライ
+            // 返信を実行
             await mk.request('notes/create', {
-                text: replyText,
+                text: reply_text,
                 replyId: note.id
             });
             console.log(`Replied to ${note.user.username}`);
         }
 
     } catch (e) {
-        console.error(`リプライエラー。: ${e.message}`);
+        console.log(`リプライエラー。: ${e.message}`);
     }
 
     // --- 独り言の処理 ---
     console.log("投稿を生成中です...");
     try {
-        // 3. タイムライン取得
+        // 1. タイムライン取得
         const tl = await mk.request('notes/timeline', { limit: 20 });
-        const tlText = tl
-            .map(n => n.text)
-            .filter(t => t)
-            .join("\n");
+        const tl_text = tl.map(n => n.text).filter(t => t).join("\n");
 
+        // 2. Geminiに投稿を依頼 (文言をPython版に統一)
         const prompt = `
-        ${config.charSetting}
+        ${config.characterSetting}
         【タイムラインの内容】
-        ${tlText}
+        ${tl_text}
         【指示】
         タイムラインを分析し、キャラ設定に従って1言投稿してください。
         - 75文字以内。相手が不快になるような内容は避けてください。
         `;
 
-        // AI独り言生成
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const postContent = response.text().trim().slice(0, 75);
+        const post_content = response.text().trim().slice(0, 75);
 
-        // 4. Misskeyにホーム投稿
-        await mk.request('notes/create', { text: postContent });
-        console.log(`Posted: ${postContent}`);
+        // 3. Misskeyに投稿
+        await mk.request('notes/create', { text: post_content });
+        console.log(`Posted: ${post_content}`);
 
     } catch (e) {
-        console.error(`投稿エラー。早急に対処お願いします: ${e.message}`);
+        console.log(`投稿エラー。早急に対処お願いします: ${e.message}`);
     }
 }
 
