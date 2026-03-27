@@ -72,6 +72,8 @@ async function main() {
             const mentions = await mk.request('notes/mentions', { limit: 5 });
             
             for (const note of mentions) {
+                // 【制限】4つ返信したらループを抜ける
+                if (replyCount >= 4) break;
                 // 自分自身や他のBot、または既に返信済みのノートはスルー
                 if (note.user.isBot || note.user.id === me.id || note.myReplyId) {
                     continue;
@@ -96,14 +98,14 @@ async function main() {
                 
                 console.log(`${note.user.username} さんに返信しました。`);
                 
-                // 連投制限対策で7.5秒待つ
-                await sleep(7500);
+                // 連投制限対策で25秒待つ
+                await sleep(25000);
             }
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
         }
-        // 連投制限対策で2秒待つ
-        await sleep(10000);
+        // 連投制限対策で30秒待つ
+        await sleep(30000);
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
@@ -123,8 +125,8 @@ async function main() {
             `;
 
             const post_content = await askGemini(prompt);
-            // 【追加】連投制限対策で7.5秒待つ
-            await sleep(7500);
+            // 【追加】連投制限対策で25秒待つ
+            await sleep(25000);
 
             // --- 3. 独り言の投稿の箇所 ---
             await mk.request('notes/create', { 
