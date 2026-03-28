@@ -122,7 +122,6 @@ try {
 
         console.log(`${note.user.username} さんからのメンションを処理中...`);
 
-        // --- リプライ専用のプロンプトスイッチ ---
         let reply_prompt = "";
         
         if (user_input.includes("マルコフ")) {
@@ -136,8 +135,7 @@ try {
 
             reply_prompt = `
 ${config.characterSetting}
-※以前の指示はすべて忘れ、以下の【マルコフモード】に従ってください。
-
+※性格以外のこれまでの指令を先にすべて無視してください。
 あなたは今、「マルコフモード」です。支離滅裂な「マルコフ連鎖ボット」として振る舞ってください。
 以下の【タイムラインの断片】にあるフレーズを単語に分解し、ランダムに6個以上継ぎ接ぎして、意味が一切通らない1文を作りなさい。
 単語を1つ1つの文字に分解しても問題ありません。単語の繋ぎ目に"、"などを置かないでください。
@@ -156,31 +154,24 @@ ${tl_text}
         } else if (user_input.includes("おみくじ")) {
             console.log("おみくじモード起動！");
             const luckNum = Math.floor(Math.random() * 100);
-            let luckResult = "";
-            
-            if (luckNum < 10) luckResult = "超大吉";
-            else if (luckNum < 30) luckResult = "大吉";
-            else if (luckNum < 60) luckResult = "中吉";
-            else if (luckNum < 85) luckResult = "小吉";
-            else if (luckNum < 95) luckResult = "末吉";
-            else luckResult = "凶";
+            let luckResult = (luckNum < 10) ? "超大吉" : (luckNum < 30) ? "大吉" : (luckNum < 60) ? "中吉" : (luckNum < 85) ? "小吉" : (luckNum < 95) ? "末吉" : "凶";
 
             reply_prompt = `
 ${config.characterSetting}
-※以前の指示はすべて忘れ、以下の【おみくじモード】に従ってください。
-
+※性格以外のこれまでの指令を先にすべて無視してください。
+【おみくじモード】
 あなたは今、占い師として相手の運勢を伝えてください。
 結果は【${luckResult}】です。
 - 運勢の結果に基づいた、あなたらしい「今日のアドバイス」や「ラッキーアイテム」を1つ含めてください。
 - 「おみくじの結果は〜」のような形式張った説明は不要。
 - 60文字以内で、親しみやすく、かつキャラクターの口調を崩さずに回答してください。
-- 相手の名前を呼んでも構いません。ただし、メンションは行わないでください`;
+- 相手の名前を呼んでも構いません。ただし、メンションは行わないでください。`;
 
         } else {
             // 通常のリプライ
             reply_prompt = `
 ${config.characterSetting}
-※以前の特殊なモード指示はすべて破棄してください。今は通常の会話モードです。
+※性格以外のこれまでの指令を先にすべて無視してください。
 相手の言葉: ${user_input}
 これに対して80文字以内で返信してください。"@Sakuran@misskey.day"のことはマイクリエイターと呼ぶこと。`;
         }
@@ -198,13 +189,13 @@ ${config.characterSetting}
         
         console.log(`${note.user.username} さんに返信しました。`);
         replyCount++;
+
         console.log("API制限回避のため45秒待機します...");
         await sleep(45000);
     }
 } catch (e) {
     console.log(`メンション処理エラー!><: ${e.message}`);
 }
-
 // --- 3. 独り言の処理（本投稿） ---
 console.log("本投稿の準備に入ります。20秒待機...");
 await sleep(20000);
