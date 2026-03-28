@@ -96,7 +96,7 @@ async function main() {
                 // 【新機能】特定のワード「マルコフ」が含まれているか判定
                 if (user_input.includes("マルコフ")) {
                     console.log("マルコフ連鎖モード起動！TLを取得します...");
-                    const tl = await mk.request('notes/timeline', { limit: 20 });
+                    const tl = await mk.request('notes/timeline', { limit: 12 });
                     // 【さらに軽量化】URLや過度な空白を削除してトークンを節約
                     const tl_text = tl
                         .filter(n => n.text && n.user.id !== me.id)
@@ -146,7 +146,7 @@ ${tl_text}
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
-            const tl = await mk.request('notes/timeline', { limit: 20 });
+            const tl = await mk.request('notes/timeline', { limit: 12 });
             
             // 【さらに軽量化】URLや過度な空白を削除してトークンを節約
             const tl_text = tl
