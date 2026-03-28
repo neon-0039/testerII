@@ -192,54 +192,10 @@ ${config.characterSetting}
 
                 console.log("API制限回避のため45秒待機します...");
                 await sleep(45000);
-            } // for終了
+            }
         } catch (e) {
             console.log(`メンション処理エラー!><: ${e.message}`);
         }
-// --- 3. 独り言の処理（本投稿） ---
-console.log("本投稿の準備に入ります。20秒待機...");
-await sleep(20000);
-
-try {
-    console.log("独り言（本投稿）を生成中です...");
-    const tl = await mk.request('notes/timeline', { limit: 27 });
-    const tl_text = tl
-        .filter(n => n.text && n.user.id !== me.id)
-        .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
-        .slice(0, 10)
-        .join("\n");
-
-    // 【重要】本投稿用のプロンプトを「通常モード」で完全に再定義
-    const main_post_prompt = `
-${config.characterSetting}
-※重要：以前の「マルコフモード」や特殊な生成ルールはすべて破棄してください。
-今は通常の独り言モードです。【タイムラインの内容】
-${tl_text}
-【指示】
-タイムラインを分析し、傾向やテンションを分析して1文字以上100文字以内で1言、見た人が不快になるような内容は避けて投稿してください。
-- 文法を成立させて生成してください。キャラクター設定にそって生成ください。「タイムライン拝見いたしました」などは書かないでください。
-- 多少支離滅裂になってしまってもいいので、必ず観測した投稿の単語を5割以上使用して文章を生成してください。
-- ":"で囲まれている英数字は無視すること。誰かに宛てて、というよりかは呟きやひとりごとに近い感じで書きなさい。
-- 特定の人の話題の時は、その人の名前を明記してください。ただし、メンションは行わないこと。`;
-
-    const post_content = await askGemini(main_post_prompt);
-    
-    await sleep(12000);
-    await mk.request('notes/create', { 
-        text: post_content.trim().slice(0, 150),
-        visibility: 'home'
-    });
-                
-            console.log(`${note.user.username} さんに返信しました。`);
-            replyCount++;
-
-                console.log("API制限回避のため45秒待機します...");
-                await sleep(45000);
-            } // ここで for ループ終了
-        } catch (e) { // ここで try 終了、catch 開始
-            console.log(`メンション処理エラー！><: ${e.message}`);
-        }
-
     } catch (e) {
         console.log(`致命的なエラー！><: ${e.message}`);
     }
