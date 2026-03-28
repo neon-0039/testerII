@@ -105,48 +105,40 @@ async function main() {
         }
 
 // --- 2. メンション取得・返信 ---
-        console.log("メンション確認中...");
-        try {
-            const mentions = await mk.request('notes/mentions', { limit: 10 });
-            let replyCount = 0;
+console.log("メンション確認中...");
+try {
+    const mentions = await mk.request('notes/mentions', { limit: 10 });
+    let replyCount = 0;
 
-            for (const note of mentions) {
-                if (replyCount >= 4) break;
+    for (const note of mentions) {
+        if (replyCount >= 4) break;
 
-                // 自分/Bot/既読/返信済み はスルー
-                if (
-                    note.user.isBot || 
-                    note.user.id === me.id || 
-                    note.myReplyId || 
-                    (note.repliesCount && note.repliesCount > 0)
-                ) {
-                    continue;
-                }
+        if (note.user.isBot || note.user.id === me.id || note.myReplyId || (note.repliesCount && note.repliesCount > 0)) {
+            continue;
+        }
 
-                let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
-                if (!user_input) continue;
+        let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
+        if (!user_input) continue;
 
-                console.log(`${note.user.username} さんからのメンションを処理中...`);
+        console.log(`${note.user.username} さんからのメンションを処理中...`);
 
-                let reply_prompt = "";
-                console.log("API制限回避のため17秒待機します...");
-                await sleep(17000);
-                // 【新機能】特定のワード「マルコフ」が含まれているか判定
-                if (user_input.includes("マルコフ")) {
-                    console.log("マルコフ連鎖モード起動！TLを取得します...");
-                    const tl = await mk.request('notes/timeline', { limit: 30 });
-                    // 【さらに軽量化】URLや過度な空白を削除してトークンを節約
-                    const tl_text = tl
-                        .filter(n => n.text && n.user.id !== me.id)
-                        .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim()) // URL除去
-                        .slice(0, 10) // 20件取得しても、Geminiに渡すのは「厳選した10件」にする
-                        .join("\n");
-                    reply_prompt = `
+        // --- リプライ専用のプロンプトスイッチ ---
+        let reply_prompt = "";
+        if (user_input.includes("マルコフ")) {
+            console.log("マルコフ連鎖モード起動！");
+            const tl = await mk.request('notes/timeline', { limit: 30 });
+            const tl_text = tl
+                .filter(n => n.text && n.user.id !== me.id)
+                .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
+                .slice(0, 10)
+                .join("\n");
+
+            reply_prompt = `
 ${config.characterSetting}
-あなたは今、支離滅裂な「マルコフ連鎖ボット」として振る舞ってください。
+あなたは今、「マルコフモード」です。支離滅裂な「マルコフ連鎖ボット」として振る舞ってください。
 以下の【タイムラインの断片】にあるフレーズを単語に分解し、ランダムに6個以上継ぎ接ぎして、意味が一切通らない1文を作りなさい。
 単語を1つ1つの文字に分解しても問題ありません。単語の繋ぎ目に"、"などを置かないでください。
-接続詞は入れたり入れなかったりしてください
+接続詞は入れたり入れなかったりしてください。
 文脈と意味、あなたのキャラクターらしい口調（語尾など）もこの回答中は無視。
 「マルコフ」という言葉は使用禁止。
 
@@ -157,66 +149,67 @@ ${tl_text}
 ・50文字以内
 ・相手への返信として出力
 ・「マルコフ連鎖です」等の説明は不要。結果の文章のみ出力。`;
-                } else {
-                    // 通常の返信
-                    reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。"@Sakuran@misskey.day"のことはマイクリエイターと呼ぶこと。`;
-                }
-
-                const reply_text = await askGemini(reply_prompt);
-                
-                await mk.request('notes/create', {
-                    text: reply_text.trim().slice(0, 120),
-                    replyId: note.id,
-                    visibility: 'home' 
-                });
-                
-                console.log(`${note.user.username} さんに返信しました。`);
-                
-                replyCount++;
-                console.log("API制限回避のため45秒待機します...");
-                await sleep(45000);
-            }
-        } catch (e) {
-            console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
+        } else {
+            // 通常のリプライ
+            reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。"@Sakuran@misskey.day"のことはマイクリエイターと呼ぶこと。`;
         }
 
-        // 本投稿（独り言）の前に、直前のリプから間隔を空ける
-        console.log("本投稿の準備に入ります。20秒待機...");
-        await sleep(20000);
-        // --- 3. 独り言の処理 ---
-        console.log("投稿を生成中です...");
-        try {
-            const tl = await mk.request('notes/timeline', { limit: 27 });
-            
-            // 【さらに軽量化】URLや過度な空白を削除してトークンを節約
-            const tl_text = tl
-                .filter(n => n.text && n.user.id !== me.id)
-                .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim()) // URL除去
-                .slice(0, 10) // 20件取得しても、Geminiに渡すのは「厳選した10件」にする
-                .join("\n");
-            
-            const prompt = `
-            ${config.characterSetting}
-            【タイムラインの内容】
-            ${tl_text}
-            【指示】
-            タイムラインを分析し、傾向やテンションを分析して1文字以上100文字以内で1言、見た人が不快になるような内容は避けて投稿してください。
-            - 文法を成立させて生成してください。キャラクター設定にそって生成ください。「タイムライン拝見いたしました」などは書かないでください。
-            - 多少支離滅裂になってしまってもいいので、必ず観測した投稿の単語を5割以上使用して文章を生成してください。
-            - ":"で囲まれている英数字は無視すること。誰かに宛てて、というよりかは呟きやひとりごとに近い感じで書きなさい。
-            - 特定の人の話題の時は、その人の名前を明記してください。ただし、メンションは行わないこと。
-            `;
+        console.log("API制限回避のため17秒待機...");
+        await sleep(17000);
 
-            const post_content = await askGemini(prompt);
-            // 【追加】連投制限対策で12秒待つ
-            await sleep(12000);
+        const reply_text = await askGemini(reply_prompt);
+        
+        await mk.request('notes/create', {
+            text: reply_text.trim().slice(0, 120),
+            replyId: note.id,
+            visibility: 'home' 
+        });
+        
+        console.log(`${note.user.username} さんに返信しました。`);
+        replyCount++;
+        await sleep(45000);
+    }
+} catch (e) {
+    console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
+}
 
-            // --- 3. 独り言の投稿の箇所 ---
-            await mk.request('notes/create', { 
-                text: post_content.trim().slice(0, 150),
-                visibility: 'home' // 【追加】独り言をホーム公開（フォロワー限定に近い状態）に固定
-            });
+// --- 3. 独り言の処理（本投稿） ---
+console.log("本投稿の準備に入ります。20秒待機...");
+await sleep(20000);
 
+try {
+    console.log("独り言（本投稿）を生成中です...");
+    const tl = await mk.request('notes/timeline', { limit: 27 });
+    const tl_text = tl
+        .filter(n => n.text && n.user.id !== me.id)
+        .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
+        .slice(0, 10)
+        .join("\n");
+
+    // 【重要】本投稿用のプロンプトを「通常モード」で完全に再定義
+    const main_post_prompt = `
+${config.characterSetting}
+※重要：以前の「マルコフモード」や特殊な生成ルールはすべて破棄してください。
+今は通常の独り言モードです。【タイムラインの内容】
+${tl_text}
+【指示】
+タイムラインを分析し、傾向やテンションを分析して1文字以上100文字以内で1言、見た人が不快になるような内容は避けて投稿してください。
+- 文法を成立させて生成してください。キャラクター設定にそって生成ください。「タイムライン拝見いたしました」などは書かないでください。
+- 多少支離滅裂になってしまってもいいので、必ず観測した投稿の単語を5割以上使用して文章を生成してください。
+- ":"で囲まれている英数字は無視すること。誰かに宛てて、というよりかは呟きやひとりごとに近い感じで書きなさい。
+- 特定の人の話題の時は、その人の名前を明記してください。ただし、メンションは行わないこと。`;
+
+    const post_content = await askGemini(main_post_prompt);
+    
+    await sleep(12000);
+    await mk.request('notes/create', { 
+        text: post_content.trim().slice(0, 150),
+        visibility: 'home'
+    });
+    console.log("本投稿が完了しました。");
+} catch (e) {
+    console.log(`本投稿処理中にエラーが発生しました: ${e.message}`);
+}
             
         } catch (e) {
             console.log(`投稿生成エラーですー！><: ${e.message}`);
