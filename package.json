@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "bot.js",
   "dependencies": {
-    "misskey-js": "latest",
-    "axios": "latest"
-  }
+  "@google/generative-ai": "^0.21.0",
+  "misskey-js": "^0.0.15",
+  "axios": "^1.6.0"
+ }
 }
