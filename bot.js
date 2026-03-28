@@ -44,7 +44,7 @@ async function askGemini(prompt) {
     const modelPriority = [
         "gemini-2.5-flash-lite", // 本命（現在 20回/日）
         "gemini-3.1-flash-lite", // 予備（明日以降 500回/日 になる期待）
-        "gemini-2.5-flash"      // さらに予備
+        "gemini-2.0-flash"      // さらに予備
     ];
 
     for (const modelId of modelPriority) {
@@ -68,7 +68,7 @@ async function askGemini(prompt) {
                 continue; // 3.1 がまだリストにない場合もこれで次へ行ける
             }
             // それ以外の重大なエラーはここでストップ
-            console.error("重大なエラー！><:", error.message);
+            console.error("重大なエラー:", error.message);
             break;
         }
     }
