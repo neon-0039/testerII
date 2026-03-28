@@ -8,7 +8,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // 【修正後】第2引数で apiVersion を "v1" に固定します
 // 最新のSDKなら、第2引数で v1 を指定すれば URL が .../v1/... に変わります
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, "v1beta");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, "v1");
 
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-preview-02-05" });
 const config = {
@@ -26,7 +26,7 @@ const mk = new misskey.api.APIClient({
 
 async function askGemini(prompt) {
     // SDKを使わず、直接 v1 の URL を組み立てる（これが一番確実）
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
     
     try {
         const res = await axios.post(url, {
