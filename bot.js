@@ -42,7 +42,7 @@ async function checkAvailableModels() {
 async function askGemini(prompt) {
     // リストにあった「models/」以降の正確な名前を使います
     // まずは安定の 2.0-flash で試すのが定石です
-    const modelId = "gemini-2.0-flash"; 
+    const modelId = "gemini-2.5-flash-lite"; 
     const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${process.env.GEMINI_API_KEY}`;
     
     try {
