@@ -5,24 +5,23 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // ここで genAI を定義する（APIキーを読み込む）
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// --- モデル確定セクション (修正版) ---
 const modelNames = [
-    "gemini-2.0-flash-lite-preview-02-05",
-    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite-preview-02-05", // あなたの環境で反応したID
     "gemini-1.5-flash"
 ];
 
-// 実行時に有効なモデルを上から順に 1 つ選ぶ
 let model;
 for (const name of modelNames) {
     try {
+        // 【重要】ここで明示的に API バージョンを意識させない書き方にします
         model = genAI.getGenerativeModel({ model: name });
-        console.log(`✅ Model confirmed: ${name}`);
-        break; // 見つかったらループを抜ける
+        console.log(`✅ Model initialized: ${name}`);
+        break;
     } catch (e) {
-        console.log(`❌ ${name} failed, trying next...`);
+        console.log(`❌ ${name} failed`);
     }
 }
-// --- ここまで ---
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
