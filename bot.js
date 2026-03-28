@@ -91,8 +91,8 @@ async function main() {
                 console.log(`${note.user.username} さんからのメンションを処理中...`);
 
                 let reply_prompt = "";
-                console.log("API制限回避のため60秒待機します...");
-                await sleep(60000);
+                console.log("API制限回避のため25秒待機します...");
+                await sleep(25000);
                 // 【新機能】特定のワード「マルコフ」が含まれているか判定
                 if (user_input.includes("マルコフ")) {
                     console.log("マルコフ連鎖モード起動！TLを取得します...");
@@ -130,8 +130,8 @@ ${tl_text}
                 console.log(`${note.user.username} さんに返信しました。`);
                 
                 replyCount++;
-                console.log("API制限回避のため30秒待機します...");
-                await sleep(30000);
+                console.log("API制限回避のため120秒待機します...");
+                await sleep(120000);
             }
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
