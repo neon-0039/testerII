@@ -173,7 +173,7 @@ ${config.characterSetting}
 ${config.characterSetting}
 ※性格以外のこれまでの指令を先にすべて無視してください。
 相手の言葉: ${user_input}
-これに対して80文字以内で返信してください。"@Sakuran@misskey.day"のことはマイクリエイターと呼ぶこと。`;
+これに対して80文字以内で返信してください。ハンドルネームが"@Sakuran@misskey.day"のユーザーのことは「マイクリエイター」と呼ぶこと。それ以外はマスターと呼ぶこと`;
                 }
 
                 console.log("API制限回避のため17秒待機します...");
