@@ -7,24 +7,10 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // 【修正後】第2引数で apiVersion を "v1" に固定します
+// 最新のSDKなら、第2引数で v1 を指定すれば URL が .../v1/... に変わります
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, "v1");
 
-const modelNames = [
-    "gemini-2.0-flash-lite-preview-02-05",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
-];
-
-let model;
-for (const name of modelNames) {
-    try {
-        model = genAI.getGenerativeModel({ model: name });
-        console.log(`✅ Model confirmed with v1: ${name}`);
-        break;
-    } catch (e) {
-        console.log(`❌ ${name} failed`);
-    }
-}
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite-preview-02-05" });
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
