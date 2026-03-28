@@ -230,8 +230,18 @@ ${tl_text}
                 visibility: 'home' 
             });
             console.log("本投稿が完了しました！");
-        } catch (e) {
-            console.log(`本投稿処理中にエラーが発生しました: ${e.message}`);
+} catch (e) {
+            console.log(`本投稿処理エラー！><: ${e.message}`);
+            
+            // エラー内容をボットに呟かせる
+            try {
+                await mk.request('notes/create', { 
+                    text: `投稿エラー！><管理者さーん！（エラー: ${e.message}）`,
+                    visibility: 'home' 
+                });
+            } catch (postError) {
+                console.error("エラー投稿自体にも失敗しました:", postError.message);
+            }
         }
     } catch (e) {
         console.log(`致命的なエラー！><: ${e.message}`);
