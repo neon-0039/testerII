@@ -129,8 +129,8 @@ ${tl_text}
                 console.log(`${note.user.username} さんに返信しました。`);
                 
                 replyCount++;
-                console.log("API制限回避のため60秒待機します...");
-                await sleep(60000);
+                console.log("API制限回避のため80秒待機します...");
+                await sleep(80000);
             }
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
