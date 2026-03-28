@@ -105,35 +105,35 @@ async function main() {
         }
 
 // --- 2. メンション取得・返信 ---
-console.log("メンション確認中...");
-try {
-    const mentions = await mk.request('notes/mentions', { limit: 10 });
-    let replyCount = 0;
+        console.log("メンション確認中...");
+        try {
+            const mentions = await mk.request('notes/mentions', { limit: 10 });
+            let replyCount = 0;
 
-    for (const note of mentions) {
-        if (replyCount >= 4) break;
+            for (const note of mentions) {
+                if (replyCount >= 4) break;
 
-        if (note.user.isBot || note.user.id === me.id || note.myReplyId || (note.repliesCount && note.repliesCount > 0)) {
-            continue;
-        }
+                if (note.user.isBot || note.user.id === me.id || note.myReplyId || (note.repliesCount && note.repliesCount > 0)) {
+                    continue;
+                }
 
-        let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
-        if (!user_input) continue;
+                let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
+                if (!user_input) continue;
 
-        console.log(`${note.user.username} さんからのメンションを処理中...`);
+                console.log(`${note.user.username} さんからのメンションを処理中...`);
 
-        let reply_prompt = "";
-        
-        if (user_input.includes("マルコフ")) {
-            console.log("マルコフ連鎖モード起動！");
-            const tl = await mk.request('notes/timeline', { limit: 30 });
-            const tl_text = tl
-                .filter(n => n.text && n.user.id !== me.id)
-                .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
-                .slice(0, 10)
-                .join("\n");
+                let reply_prompt = "";
+                
+                if (user_input.includes("マルコフ")) {
+                    console.log("マルコフ連鎖モード起動！");
+                    const tl = await mk.request('notes/timeline', { limit: 30 });
+                    const tl_text = tl
+                        .filter(n => n.text && n.user.id !== me.id)
+                        .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
+                        .slice(0, 10)
+                        .join("\n");
 
-            reply_prompt = `
+                    reply_prompt = `
 ${config.characterSetting}
 ※性格以外のこれまでの指令を先にすべて無視してください。
 あなたは今、「マルコフモード」です。支離滅裂な「マルコフ連鎖ボット」として振る舞ってください。
@@ -151,12 +151,12 @@ ${tl_text}
 ・相手への返信として出力
 ・結果の文章のみ出力。`;
 
-        } else if (user_input.includes("おみくじ")) {
-            console.log("おみくじモード起動！");
-            const luckNum = Math.floor(Math.random() * 100);
-            let luckResult = (luckNum < 10) ? "超大吉" : (luckNum < 30) ? "大吉" : (luckNum < 60) ? "中吉" : (luckNum < 85) ? "小吉" : (luckNum < 95) ? "末吉" : "凶";
+                } else if (user_input.includes("おみくじ")) {
+                    console.log("おみくじモード起動！");
+                    const luckNum = Math.floor(Math.random() * 100);
+                    let luckResult = (luckNum < 10) ? "超大吉" : (luckNum < 30) ? "大吉" : (luckNum < 60) ? "中吉" : (luckNum < 85) ? "小吉" : (luckNum < 95) ? "末吉" : "凶";
 
-            reply_prompt = `
+                    reply_prompt = `
 ${config.characterSetting}
 ※性格以外のこれまでの指令を先にすべて無視してください。
 【おみくじモード】
@@ -167,35 +167,35 @@ ${config.characterSetting}
 - 60文字以内で、親しみやすく、かつキャラクターの口調を崩さずに回答してください。
 - 相手の名前を呼んでも構いません。ただし、メンションは行わないでください。`;
 
-        } else {
-            // 通常のリプライ
-            reply_prompt = `
+                } else {
+                    // 通常のリプライ
+                    reply_prompt = `
 ${config.characterSetting}
 ※性格以外のこれまでの指令を先にすべて無視してください。
 相手の言葉: ${user_input}
 これに対して80文字以内で返信してください。"@Sakuran@misskey.day"のことはマイクリエイターと呼ぶこと。`;
+                }
+
+                console.log("API制限回避のため17秒待機します...");
+                await sleep(17000);
+
+                const reply_text = await askGemini(reply_prompt);
+                
+                await mk.request('notes/create', {
+                    text: reply_text.trim().slice(0, 120),
+                    replyId: note.id,
+                    visibility: 'home' 
+                });
+                
+                console.log(`${note.user.username} さんに返信しました。`);
+                replyCount++;
+
+                console.log("API制限回避のため45秒待機します...");
+                await sleep(45000);
+            } // for終了
+        } catch (e) {
+            console.log(`メンション処理エラー!><: ${e.message}`);
         }
-
-        console.log("API制限回避のため17秒待機します...");
-        await sleep(17000);
-
-        const reply_text = await askGemini(reply_prompt);
-        
-        await mk.request('notes/create', {
-            text: reply_text.trim().slice(0, 120),
-            replyId: note.id,
-            visibility: 'home' 
-        });
-        
-        console.log(`${note.user.username} さんに返信しました。`);
-        replyCount++;
-
-        console.log("API制限回避のため45秒待機します...");
-        await sleep(45000);
-    }
-} catch (e) {
-    console.log(`メンション処理エラー!><: ${e.message}`);
-}
 // --- 3. 独り言の処理（本投稿） ---
 console.log("本投稿の準備に入ります。20秒待機...");
 await sleep(20000);
