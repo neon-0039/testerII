@@ -1,6 +1,9 @@
-import misskey from 'misskey-js';
+import * as misskey from 'misskey-js'; // ここを * as に変更
 import axios from 'axios';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Misskey APIの初期化部分がある場合、以下のように書いてみてください
+// const api = new misskey.api.api({ ... });
 
 // もしこれまでのコードで misskey.api を使っていたなら、以下のように定義し直すとスムーズです
 const { api: MisskeyApi } = misskey;
