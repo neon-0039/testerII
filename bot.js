@@ -142,7 +142,7 @@ ${tl_text}
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
-            const tl = await mk.request('notes/timeline', { limit: 27 });
+            const tl = await mk.request('notes/timeline', { limit: 20 });
             const tl_text = tl.map(n => n.text).filter(t => t).join("\n");
             const prompt = `
             ${config.characterSetting}
