@@ -9,7 +9,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // モデルの指定（2.0 Flashを使う）
 // 「models/」を頭につけることで、SDKの自動補完によるエラーを回避します
 // 管理画面の「3.1」を信じるならこれ
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+// 「lite」も「-exp」も付けない、もっとも標準的な ID
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
