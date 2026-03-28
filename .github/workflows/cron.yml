@@ -1,10 +1,11 @@
 name: Misskey Bot JS Cron
 concurrency:
   group: bot-group
-  cancel-in-progress: true # 新しいのが来たら古い方を殺す
+  cancel-in-progress: true
+
 on:
   schedule:
-  - cron: '7,17,27,37,47,57 * * * *'
+    - cron: '7,17,27,37,47,57 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -18,15 +19,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # キャッシュエラーを避けるため、一旦キャッシュ設定はなしでいきます
 
-      - name: Install dependencies
+      - name: Install dependencies (Force Update)
+        # @latest を指定し、package-lockを無視して最新を入れ直します
         run: |
-          npm install misskey-js@latest @google/generative-ai@latest
+          npm install @google/generative-ai@0.21.0 misskey-js@latest axios
 
       - name: Run bot
         env:
           MK_DOMAIN: ${{ secrets.MK_DOMAIN }}
           MK_TOKEN: ${{ secrets.MK_TOKEN }}
+          MK_TOKEN_ID: ${{ secrets.MK_TOKEN_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: node bot.js
