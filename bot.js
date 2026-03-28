@@ -23,7 +23,6 @@ const currentKey = (jstHour >= 12) ? keyMain : (keySub || keyMain);
 console.log(`【システム情報】現在時刻: ${jstHour}時 / 使用APIキー: ${jstHour >= 12 ? '午後(メイン)' : '午前(サブ)'}`);
 // 現在時刻に基づいて使用するキーを決定（日本時間 JST 基準）
 
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
