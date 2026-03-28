@@ -135,6 +135,8 @@ try {
 
             reply_prompt = `
 ${config.characterSetting}
+※重要：以前の「マルコフモード」や特殊な生成ルールはすべて破棄してください。
+今は通常の独り言モードです。【タイムラインの内容】
 あなたは今、「マルコフモード」です。支離滅裂な「マルコフ連鎖ボット」として振る舞ってください。
 以下の【タイムラインの断片】にあるフレーズを単語に分解し、ランダムに6個以上継ぎ接ぎして、意味が一切通らない1文を作りなさい。
 単語を1つ1つの文字に分解しても問題ありません。単語の繋ぎ目に"、"などを置かないでください。
@@ -149,6 +151,30 @@ ${tl_text}
 ・50文字以内
 ・相手への返信として出力
 ・「マルコフ連鎖です」等の説明は不要。結果の文章のみ出力。`;
+                } else if (user_input.includes("おみくじ")) {
+                    console.log("おみくじモード起動！");
+                    const luckNum = Math.floor(Math.random() * 100);
+                    let luckResult = "";
+                    
+                    if (luckNum < 10) luckResult = "超大吉";
+                    else if (luckNum < 30) luckResult = "大吉";
+                    else if (luckNum < 60) luckResult = "中吉";
+                    else if (luckNum < 85) luckResult = "小吉";
+                    else if (luckNum < 95) luckResult = "末吉";
+                    else luckResult = "凶";
+
+                    reply_prompt = `
+${config.characterSetting}
+※重要：以前の「マルコフモード」や特殊な生成ルールはすべて破棄してください。
+今は通常の独り言モードです。【タイムラインの内容】
+【おみくじモード】
+あなたは今、占い師として相手の運勢を伝えてください。
+結果は【${luckResult}】です。
+- 運勢の結果に基づいた、あなたらしい「今日のアドバイス」や「ラッキーアイテム」を1つ含めてください。
+- 「おみくじの結果は〜」のような形式張った説明は不要。
+- 60文字以内で、親しみやすく、かつキャラクターの口調を崩さずに回答してください。
+- 相手の名前を呼んでも構いません。
+`;
         } else {
             // 通常のリプライ
             reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。"@Sakuran@misskey.day"のことはマイクリエイターと呼ぶこと。`;
