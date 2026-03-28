@@ -1,7 +1,7 @@
-const misskey = require('misskey-js');
-const axios = require('axios');
+const misskey = import misskey from 'misskey-js';
+const axios = import axios from 'axios';
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenerativeAI } = import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // 【修正前】
 // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
