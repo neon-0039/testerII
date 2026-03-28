@@ -1,6 +1,13 @@
 const misskey = require('misskey-js');
 const axios = require('axios');
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// ここで genAI を定義する（APIキーを読み込む）
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// モデルの指定（2.0 Flashを使う）
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
@@ -14,16 +21,17 @@ const mk = new misskey.api.APIClient({
     credential: config.token
 });
 
-/**
- * Gemini API に直接リクエストを送る関数
- */
+//Gemini API に直接リクエストを送る関数
 async function askGemini(prompt) {
-    
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${config.geminiKey}`;
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const payload = {
-        contents: [{ parts: [{ text: prompt }] }]
-    };
+    try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+    } catch (error) {
+        console.error("Gemini Error:", error.message);
+        throw error;
+    }
+}
 
     try {
         const response = await axios.post(url, payload);
