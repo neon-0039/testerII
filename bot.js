@@ -1,7 +1,10 @@
-const misskey = import misskey from 'misskey-js';
-const axios = import axios from 'axios';
+import misskey from 'misskey-js';
+import axios from 'axios';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// もしこれまでのコードで misskey.api を使っていたなら、以下のように定義し直すとスムーズです
+const { api: MisskeyApi } = misskey;
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-const { GoogleGenerativeAI } = import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // 【修正前】
 // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
