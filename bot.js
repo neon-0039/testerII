@@ -23,7 +23,16 @@ const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
 });
-
+async function checkAvailableModels() {
+    const url = `https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`;
+    try {
+        const res = await axios.get(url);
+        console.log("利用可能なモデルリスト:");
+        res.data.models.forEach(m => console.log("- " + m.name));
+    } catch (e) {
+        console.error("モデルリスト取得失敗:", e.message);
+    }
+}
 async function askGemini(prompt) {
     // SDKを使わず、直接 v1 の URL を組み立てる（これが一番確実）
     const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
@@ -196,5 +205,5 @@ ${tl_text}
         console.log(`全体エラー: ${e.message}`);
     }
 }
-
+await checkAvailableModels();
 main();
