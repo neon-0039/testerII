@@ -144,7 +144,7 @@ ${tl_text}
         console.log("投稿を生成中です...");
         try {
             // タイムラインを少し多め（40件くらい）に取得
-            const tl = await mk.request('notes/timeline', { limit: 40 });
+            const tl = await mk.request('notes/timeline', { limit: 20 });
             
             // 【修正ポイント】自分の投稿（me.id）を除外するフィルタを追加
             const tl_text = tl
