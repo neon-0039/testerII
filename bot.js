@@ -40,31 +40,41 @@ async function checkAvailableModels() {
     }
 }
 async function askGemini(prompt) {
-    // リストにあった「models/」以降の正確な名前を使います
-    // まずは安定の 2.0-flash で試すのが定石です
-    const modelId = "gemini-2.5-flash-lite"; 
-    const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${process.env.GEMINI_API_KEY}`;
-    
-    try {
-        const res = await axios.post(url, {
-            contents: [{ parts: [{ text: prompt }] }]
-        });
+    // 優先順位が高い順に並べる
+    const modelPriority = [
+        "gemini-2.5-flash-lite", // 本命（現在 20回/日）
+        "gemini-3.1-flash-lite", // 予備（明日以降 500回/日 になる期待）
+        "gemini-2.5-flash"      // さらに予備
+    ];
+
+    for (const modelId of modelPriority) {
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${process.env.GEMINI_API_KEY}`;
         
-        if (res.data && res.data.candidates && res.data.candidates[0].content) {
+        try {
+            console.log(`モデル試行中: ${modelId}`);
+            const res = await axios.post(url, {
+                contents: [{ parts: [{ text: prompt }] }]
+            });
+            
+            // 成功したら結果を返して終了
             return res.data.candidates[0].content.parts[0].text;
+            
+        } catch (error) {
+            if (error.response && error.response.status === 429) {
+                console.warn(`⚠️ ${modelId} が枠不足です。次のモデルを試します...`);
+                continue; // 次のモデルへ
+            } else if (error.response && error.response.status === 404) {
+                console.warn(`⚠️ ${modelId} はまだ存在しません。次へ...`);
+                continue; // 3.1 がまだリストにない場合もこれで次へ行ける
+            }
+            // それ以外の重大なエラーはここでストップ
+            console.error("重大なエラー！><:", error.message);
+            break;
         }
-        return "……（沈黙）";
-    } catch (error) {
-        // ここで 429 が出た場合の対策をログに出すようにします
-        if (error.response && error.response.status === 429) {
-            console.error("🚨 429 Error: まだ無料枠が反映されていません。数時間待つか、別のモデル名を試してください。");
-            console.error("詳細:", JSON.stringify(error.response.data));
-        } else {
-            console.error("Gemini API Error:", error.response ? JSON.stringify(error.response.data) : error.message);
-        }
-        return "エラー発生！人間さんなんとかしてください！";
     }
+    return "エラー発生！>< 人間さん！なんとかしてください！";
 }
+        
 async function main() {
     async function debugModels() {
         const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
