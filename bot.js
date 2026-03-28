@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // 最新のSDKなら、第2引数で v1 を指定すれば URL が .../v1/... に変わります
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, "v1");
 
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
@@ -42,7 +42,7 @@ async function checkAvailableModels() {
 async function askGemini(prompt) {
     // リストにあった「models/」以降の正確な名前を使います
     // まずは安定の 2.0-flash で試すのが定石です
-    const modelId = "gemini-2.5-flash-lite"; 
+    const modelId = "gemini-3.1-flash-lite"; 
     const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${process.env.GEMINI_API_KEY}`;
     
     try {
@@ -62,7 +62,7 @@ async function askGemini(prompt) {
         } else {
             console.error("Gemini API Error:", error.response ? JSON.stringify(error.response.data) : error.message);
         }
-        return "……（エラーが発生しました）";
+        return "エラー発生！人間さんなんとかしてください！";
     }
 }
 async function main() {
@@ -206,11 +206,11 @@ ${tl_text}
 
             
         } catch (e) {
-            console.log(`投稿生成エラー: ${e.message}`);
+            console.log(`投稿生成エラーですー！: ${e.message}`);
         }
 
     } catch (e) {
-        console.log(`全体エラー: ${e.message}`);
+        console.log(`致命的なエラー！><: ${e.message}`);
     }
 }
 await checkAvailableModels();
