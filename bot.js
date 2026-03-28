@@ -161,16 +161,16 @@ ${tl_text}
                 console.log(`${note.user.username} さんに返信しました。`);
                 
                 replyCount++;
-                console.log("API制限回避のため120秒待機します...");
-                await sleep(120000);
+                console.log("API制限回避のため45秒待機します...");
+                await sleep(45000);
             }
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
         }
 
         // 本投稿（独り言）の前に、直前のリプから間隔を空ける
-        console.log("本投稿の準備に入ります。120秒待機...");
-        await sleep(120000);
+        console.log("本投稿の準備に入ります。20秒待機...");
+        await sleep(20000);
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
