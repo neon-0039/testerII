@@ -55,27 +55,27 @@ async function askGemini(prompt) {
     ];
 
     for (const modelId of modelPriority) {
-        const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+        // key= の後ろを currentKey にするのがポイント！
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${currentKey}`;
         
         try {
             console.log(`モデル試行中: ${modelId}`);
             const res = await axios.post(url, {
                 contents: [{ parts: [{ text: prompt }] }]
             });
-            
-            // 成功したら結果を返して終了
             return res.data.candidates[0].content.parts[0].text;
             
         } catch (error) {
-            if (error.response && error.response.status === 429) {
+            const status = error.response ? error.response.status : null;
+            if (status === 429) {
                 console.warn(`⚠️ ${modelId} が枠不足です。次のモデルを試します...`);
-                continue; // 次のモデルへ
-            } else if (error.response && error.response.status === 404) {
-                console.warn(`⚠️ ${modelId} はまだ存在しません。次へ...`);
-                continue; // 3.1 がまだリストにない場合もこれで次へ行ける
+                continue;
+            } else if (status === 404) {
+                console.warn(`⚠️ ${modelId} が発見できません。次のモデルを試します...`);
+                continue;
             }
             // それ以外の重大なエラーはここでストップ
-            console.error("重大なエラー！><管理者さんに報告お願いします！:", error.message);
+            console.error("致命的なエラー！><管理者さんに報告お願いします！:", error.message);
             break;
         }
     }
