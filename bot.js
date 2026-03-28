@@ -69,30 +69,31 @@ async function main() {
 // --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
         try {
-            // 少し多めに取得して、その中から未返信の最新4件を探す
+            // limitを10にして、未返信のものを探す範囲を広げる
             const mentions = await mk.request('notes/mentions', { limit: 10 });
             let replyCount = 0;
 
             for (const note of mentions) {
-                // 4つ返信したら終了
                 if (replyCount >= 4) break;
 
-                // 自分、Bot、または既に返信済み(myReplyId)ならスキップ
-                if (note.user.isBot || note.user.id === me.id || note.myReplyId) {
+                // 【修正ポイント】自分/Bot/既読(myReplyId) に加え、「返信数が0より大きい」場合もスキップ
+                if (
+                    note.user.isBot || 
+                    note.user.id === me.id || 
+                    note.myReplyId || 
+                    (note.repliesCount && note.repliesCount > 0)
+                ) {
                     continue;
                 }
 
-                // メンション部分を除去
                 let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
                 if (!user_input) continue;
 
-                console.log(`${note.user.username} さんからのメンションを処理中... (${replyCount + 1}/4)`);
+                console.log(`${note.user.username} さんからの未返信メンションを処理中...`);
 
-                // Geminiに返信を考えてもらう
-                const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。"@Sakuran@misskey.day"というユーザーへの二人称は「マイクリエイター」とすること。"足立レイ"、"九十九シオン"というキャラクター名の2人のうちどちらかもしくは両方が話題に上がった時、2人のことは先輩と呼ぶこと。`;
+                const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。`;
                 const reply_text = await askGemini(reply_prompt);
                 
-                // 返信を投稿（ホーム公開固定）
                 await mk.request('notes/create', {
                     text: reply_text.trim().slice(0, 120),
                     replyId: note.id,
@@ -101,17 +102,17 @@ async function main() {
                 
                 console.log(`${note.user.username} さんに返信しました。`);
                 
-                // カウントを増やして、40秒待機（429エラー対策）
                 replyCount++;
-                console.log("API制限回避のため25秒待機します...");
+                console.log("API制限回避のため40秒待機します...");
                 await sleep(40000);
             }
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
         }
-        // 連投制限対策で45秒待つ
+
+        // 本投稿（独り言）の前に、直前のリプから間隔を空ける
+        console.log("本投稿の準備に入ります。45秒待機...");
         await sleep(45000);
-        replyCount=0;
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
