@@ -69,14 +69,13 @@ async function main() {
 // --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
         try {
-            // limitを10にして、未返信のものを探す範囲を広げる
             const mentions = await mk.request('notes/mentions', { limit: 10 });
             let replyCount = 0;
 
             for (const note of mentions) {
                 if (replyCount >= 4) break;
 
-                // 【修正ポイント】自分/Bot/既読(myReplyId) に加え、「返信数が0より大きい」場合もスキップ
+                // 自分/Bot/既読/返信済み はスルー
                 if (
                     note.user.isBot || 
                     note.user.id === me.id || 
@@ -89,9 +88,36 @@ async function main() {
                 let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
                 if (!user_input) continue;
 
-                console.log(`${note.user.username} さんからの未返信メンションを処理中...`);
+                console.log(`${note.user.username} さんからのメンションを処理中...`);
 
-                const reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。`;
+                let reply_prompt = "";
+                
+                // 【新機能】特定のワード「マルコフ」が含まれているか判定
+                if (user_input.includes("マルコフ")) {
+                    console.log("マルコフ連鎖モード起動！TLを取得します...");
+                    
+                    // TLを20件取得して、材料にする
+                    const tl = await mk.request('notes/timeline', { limit: 20 });
+                    const tl_text = tl.map(n => n.text).filter(t => t).join("\n");
+                    
+                    reply_prompt = `
+${config.characterSetting}
+あなたは今、支離滅裂な「マルコフ連鎖ボット」として振る舞ってください。
+以下の【タイムラインの断片】にある単語やフレーズをランダムに継ぎ接ぎして、意味が一切通らない、不思議な1文を作ってください。
+文脈は無視して構いません。あなたのキャラクターらしい口調（語尾など）は無視してください。
+
+【タイムラインの断片】
+${tl_text}
+
+【制約】
+・60文字以内
+・相手への返信として出力
+・「マルコフ連鎖です」等の説明は不要。結果の文章のみ出力。`;
+                } else {
+                    // 通常の返信
+                    reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。`;
+                }
+
                 const reply_text = await askGemini(reply_prompt);
                 
                 await mk.request('notes/create', {
@@ -123,9 +149,9 @@ async function main() {
             【タイムラインの内容】
             ${tl_text}
             【指示】
-            タイムラインを分析し、傾向やテンションを分析してキャラ設定に従って1言投稿してください。
+            タイムラインを分析し、傾向やテンションを分析して1言投稿してください。
             - 100文字以内。見た人が不快になるような内容は避けてください。
-            - 多少支離滅裂になってしまっても問題ありませんので、必ず観測した投稿の単語をのみを使用して文章を生成してください。
+            - 多少支離滅裂になってしまっても問題ありませんので、必ず観測した投稿の単語を7割以上使用して文章を生成してください。
             - 特定の人の話題の時は、その人の名前を明記してください。ただし、メンションは行わないこと。
             - "@Sakuran@misskey.day"というユーザーへの二人称は「マイクリエイター」とすること。
             - "足立レイ"、"九十九シオン"というキャラクター名の2人のうちどちらかもしくは両方が話題に上がった時、2人のことは先輩と呼ぶこと。
