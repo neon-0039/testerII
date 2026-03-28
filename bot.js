@@ -26,7 +26,7 @@ const mk = new misskey.api.APIClient({
 
 async function askGemini(prompt) {
     // SDKを使わず、直接 v1 の URL を組み立てる（これが一番確実）
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
     
     try {
         const res = await axios.post(url, {
