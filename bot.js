@@ -124,6 +124,7 @@ try {
 
         // --- リプライ専用のプロンプトスイッチ ---
         let reply_prompt = "";
+        
         if (user_input.includes("マルコフ")) {
             console.log("マルコフ連鎖モード起動！");
             const tl = await mk.request('notes/timeline', { limit: 30 });
@@ -135,8 +136,8 @@ try {
 
             reply_prompt = `
 ${config.characterSetting}
-※重要：以前の「マルコフモード」や特殊な生成ルールはすべて破棄してください。
-今は通常の独り言モードです。【タイムラインの内容】
+※以前の指示はすべて忘れ、以下の【マルコフモード】に従ってください。
+
 あなたは今、「マルコフモード」です。支離滅裂な「マルコフ連鎖ボット」として振る舞ってください。
 以下の【タイムラインの断片】にあるフレーズを単語に分解し、ランダムに6個以上継ぎ接ぎして、意味が一切通らない1文を作りなさい。
 単語を1つ1つの文字に分解しても問題ありません。単語の繋ぎ目に"、"などを置かないでください。
@@ -150,37 +151,41 @@ ${tl_text}
 【制約】
 ・50文字以内
 ・相手への返信として出力
-・「マルコフ連鎖です」等の説明は不要。結果の文章のみ出力。`;
-                } else if (user_input.includes("おみくじ")) {
-                    console.log("おみくじモード起動！");
-                    const luckNum = Math.floor(Math.random() * 100);
-                    let luckResult = "";
-                    
-                    if (luckNum < 10) luckResult = "超大吉";
-                    else if (luckNum < 30) luckResult = "大吉";
-                    else if (luckNum < 60) luckResult = "中吉";
-                    else if (luckNum < 85) luckResult = "小吉";
-                    else if (luckNum < 95) luckResult = "末吉";
-                    else luckResult = "凶";
+・結果の文章のみ出力。`;
 
-                    reply_prompt = `
+        } else if (user_input.includes("おみくじ")) {
+            console.log("おみくじモード起動！");
+            const luckNum = Math.floor(Math.random() * 100);
+            let luckResult = "";
+            
+            if (luckNum < 10) luckResult = "超大吉";
+            else if (luckNum < 30) luckResult = "大吉";
+            else if (luckNum < 60) luckResult = "中吉";
+            else if (luckNum < 85) luckResult = "小吉";
+            else if (luckNum < 95) luckResult = "末吉";
+            else luckResult = "凶";
+
+            reply_prompt = `
 ${config.characterSetting}
-※重要：以前の「マルコフモード」や特殊な生成ルールはすべて破棄してください。
-今は通常の独り言モードです。【タイムラインの内容】
-【おみくじモード】
+※以前の指示はすべて忘れ、以下の【おみくじモード】に従ってください。
+
 あなたは今、占い師として相手の運勢を伝えてください。
 結果は【${luckResult}】です。
 - 運勢の結果に基づいた、あなたらしい「今日のアドバイス」や「ラッキーアイテム」を1つ含めてください。
 - 「おみくじの結果は〜」のような形式張った説明は不要。
 - 60文字以内で、親しみやすく、かつキャラクターの口調を崩さずに回答してください。
-- 相手の名前を呼んでも構いません。
-`;
+- 相手の名前を呼んでも構いません。ただし、メンションは行わないでください`;
+
         } else {
             // 通常のリプライ
-            reply_prompt = `${config.characterSetting}\n相手の言葉: ${user_input}\nこれに対して80文字以内で返信してください。"@Sakuran@misskey.day"のことはマイクリエイターと呼ぶこと。`;
+            reply_prompt = `
+${config.characterSetting}
+※以前の特殊なモード指示はすべて破棄してください。今は通常の会話モードです。
+相手の言葉: ${user_input}
+これに対して80文字以内で返信してください。"@Sakuran@misskey.day"のことはマイクリエイターと呼ぶこと。`;
         }
 
-        console.log("API制限回避のため17秒待機...");
+        console.log("API制限回避のため17秒待機します...");
         await sleep(17000);
 
         const reply_text = await askGemini(reply_prompt);
@@ -193,10 +198,11 @@ ${config.characterSetting}
         
         console.log(`${note.user.username} さんに返信しました。`);
         replyCount++;
+        console.log("API制限回避のため45秒待機します...");
         await sleep(45000);
     }
 } catch (e) {
-    console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
+    console.log(`メンション処理エラー!><: ${e.message}`);
 }
 
 // --- 3. 独り言の処理（本投稿） ---
@@ -232,9 +238,9 @@ ${tl_text}
         text: post_content.trim().slice(0, 150),
         visibility: 'home'
     });
-    console.log("本投稿が完了しました。");
+    console.log("本投稿が完了！");
 } catch (e) {
-    console.log(`本投稿処理中にエラーが発生しました: ${e.message}`);
+    console.log(`本投稿処理エラー！><: ${e.message}`);
 }
             
         } catch (e) {
