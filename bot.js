@@ -40,25 +40,27 @@ async function checkAvailableModels() {
     }
 }
 async function askGemini(prompt) {
-    // SDKを使わず、直接 v1 の URL を組み立てる（これが一番確実）
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    // リストにあった「models/」以降の正確な名前を使います
+    // まずは安定の 2.0-flash で試すのが定石です
+    const modelId = "gemini-2.0-flash"; 
+    const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${process.env.GEMINI_API_KEY}`;
     
     try {
         const res = await axios.post(url, {
             contents: [{ parts: [{ text: prompt }] }]
         });
         
-        // 成功したらテキストを返す
         if (res.data && res.data.candidates && res.data.candidates[0].content) {
             return res.data.candidates[0].content.parts[0].text;
         }
-        return "……（考え中）";
+        return "……（沈黙）";
     } catch (error) {
-        // ここで 404 が出たら名前間違い、429 が出たら枠不足（Limit 0）です
-        if (error.response) {
-            console.error("Gemini API Error:", JSON.stringify(error.response.data));
+        // ここで 429 が出た場合の対策をログに出すようにします
+        if (error.response && error.response.status === 429) {
+            console.error("🚨 429 Error: まだ無料枠が反映されていません。数時間待つか、別のモデル名を試してください。");
+            console.error("詳細:", JSON.stringify(error.response.data));
         } else {
-            console.error("Gemini Error:", error.message);
+            console.error("Gemini API Error:", error.response ? JSON.stringify(error.response.data) : error.message);
         }
         return "……（エラーが発生しました）";
     }
