@@ -3,20 +3,23 @@ const axios = require('axios');
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// ここで genAI を定義する（APIキーを読み込む）
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// --- モデル確定セクション (修正版) ---
+// 【修正前】
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// 【修正後】第2引数で apiVersion を "v1" に固定します
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, "v1");
+
 const modelNames = [
-    "gemini-2.0-flash-lite-preview-02-05", // あなたの環境で反応したID
+    "gemini-2.0-flash-lite-preview-02-05",
+    "gemini-2.0-flash",
     "gemini-1.5-flash"
 ];
 
 let model;
 for (const name of modelNames) {
     try {
-        // 【重要】ここで明示的に API バージョンを意識させない書き方にします
         model = genAI.getGenerativeModel({ model: name });
-        console.log(`✅ Model initialized: ${name}`);
+        console.log(`✅ Model confirmed with v1: ${name}`);
         break;
     } catch (e) {
         console.log(`❌ ${name} failed`);
