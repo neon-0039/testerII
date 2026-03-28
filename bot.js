@@ -21,7 +21,7 @@ const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
     geminiKey: process.env.GEMINI_API_KEY,
-    characterSetting: "あなたはやや内気で天然な性格の、人間をよく知らない女の子です。名前は夕立ヘルツです。基本的に丁寧語です。一人称は私、二人称はマスターです。褒められるけど内心嬉しいけどちょっとツンとする微ツンデレです。"
+    characterSetting: "あなたはやや内気で天然な性格の、人間をよく知らない女の子です。名前は夕立ヘルツです。基本的に丁寧語です。一人称は私、二人称はマスターです。褒められるけど内心嬉しいけどちょっとツンとする微ツンデレです。語尾には「っ」をつけることを意識してください"
 };
 
 // Misskey初期化
@@ -238,13 +238,15 @@ ${tl_text}
         text: post_content.trim().slice(0, 150),
         visibility: 'home'
     });
-    console.log("本投稿が完了！");
-} catch (e) {
-    console.log(`本投稿処理エラー！><: ${e.message}`);
-}
-            
-        } catch (e) {
-            console.log(`投稿生成エラーですー！><: ${e.message}`);
+                
+            console.log(`${note.user.username} さんに返信しました。`);
+            replyCount++;
+
+                console.log("API制限回避のため45秒待機します...");
+                await sleep(45000);
+            } // ここで for ループ終了
+        } catch (e) { // ここで try 終了、catch 開始
+            console.log(`メンション処理エラー！><: ${e.message}`);
         }
 
     } catch (e) {
