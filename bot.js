@@ -9,12 +9,19 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const { api: MisskeyApi } = misskey;
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// 【修正前】
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// --- APIキーの設定 ---
+const keyMain = process.env.GEMINI_API_KEY;      // プロジェクトA
+const keySub = process.env.GEMINI_API_KEY_SUB;   // プロジェクトB
 
-// 【修正後】第2引数で apiVersion を "v1" に固定します
-// 最新のSDKなら、第2引数で v1 を指定すれば URL が .../v1/... に変わります
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, "v1");
+// --- 時間による切り替えロジック (メインを午後に設定) ---
+const now = new Date();
+const jstHour = (now.getUTCHours() + 9) % 24; // UTCからJSTへ変換
+
+// 12時以降(午後)ならメイン、それ以外(午前)ならサブを使用
+const currentKey = (jstHour >= 12) ? keyMain : (keySub || keyMain); 
+
+console.log(`【システム情報】現在時刻: ${jstHour}時 / 使用APIキー: ${jstHour >= 12 ? '午後(メイン)' : '午前(サブ)'}`);
+// 現在時刻に基づいて使用するキーを決定（日本時間 JST 基準）
 
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 const config = {
