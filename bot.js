@@ -23,25 +23,14 @@ const mk = new misskey.api.APIClient({
 
 async function askGemini(prompt) {
     try {
-        // 冒頭で定義した model を直接使う
+        // 冒頭で定義した model を直接使う（SDK方式）
         const result = await model.generateContent(prompt);
         const response = await result.response;
         return response.text();
     } catch (error) {
         console.error("Gemini Error:", error.message);
+        // エラーが出ても止まらないように空文字を返す
         return "……（考え中）"; 
-    }
-}
-
-    try {
-        const response = await axios.post(url, payload);
-        return response.data.candidates[0].content.parts[0].text;
-    } catch (error) {
-        if (error.response) {
-            // ここで出るエラーが 404 ならモデル名、429 なら回数制限です
-            console.error("Gemini Error:", JSON.stringify(error.response.data));
-        }
-        throw error;
     }
 }
 
