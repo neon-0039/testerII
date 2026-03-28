@@ -25,18 +25,29 @@ const mk = new misskey.api.APIClient({
 });
 
 async function askGemini(prompt) {
+    // SDKを使わず、直接 v1 の URL を組み立てる（これが一番確実）
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    
     try {
-        // 冒頭で定義した model を直接使う（SDK方式）
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
+        const res = await axios.post(url, {
+            contents: [{ parts: [{ text: prompt }] }]
+        });
+        
+        // 成功したらテキストを返す
+        if (res.data && res.data.candidates && res.data.candidates[0].content) {
+            return res.data.candidates[0].content.parts[0].text;
+        }
+        return "……（考え中）";
     } catch (error) {
-        console.error("Gemini Error:", error.message);
-        // エラーが出ても止まらないように空文字を返す
-        return "……（考え中）"; 
+        // ここで 404 が出たら名前間違い、429 が出たら枠不足（Limit 0）です
+        if (error.response) {
+            console.error("Gemini API Error:", JSON.stringify(error.response.data));
+        } else {
+            console.error("Gemini Error:", error.message);
+        }
+        return "……（エラーが発生しました）";
     }
 }
-
 async function main() {
     async function debugModels() {
         const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
