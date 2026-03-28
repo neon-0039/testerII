@@ -7,7 +7,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // モデルの指定（2.0 Flashを使う）
-const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
