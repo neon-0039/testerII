@@ -21,15 +21,15 @@ const mk = new misskey.api.APIClient({
     credential: config.token
 });
 
-//Gemini API に直接リクエストを送る関数
 async function askGemini(prompt) {
     try {
+        // 冒頭で定義した model を直接使う
         const result = await model.generateContent(prompt);
         const response = await result.response;
         return response.text();
     } catch (error) {
         console.error("Gemini Error:", error.message);
-        throw error;
+        return "……（考え中）"; 
     }
 }
 
