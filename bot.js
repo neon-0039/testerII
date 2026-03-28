@@ -68,7 +68,7 @@ async function askGemini(prompt) {
                 continue; // 3.1 がまだリストにない場合もこれで次へ行ける
             }
             // それ以外の重大なエラーはここでストップ
-            console.error("重大なエラー:", error.message);
+            console.error("重大なエラー！><管理者さんに報告お願いします！:", error.message);
             break;
         }
     }
@@ -129,8 +129,8 @@ async function main() {
                 console.log(`${note.user.username} さんからのメンションを処理中...`);
 
                 let reply_prompt = "";
-                console.log("API制限回避のため50秒待機します...");
-                await sleep(50000);
+                console.log("API制限回避のため17秒待機します...");
+                await sleep(17000);
                 // 【新機能】特定のワード「マルコフ」が含まれているか判定
                 if (user_input.includes("マルコフ")) {
                     console.log("マルコフ連鎖モード起動！TLを取得します...");
@@ -217,7 +217,7 @@ ${tl_text}
 
             
         } catch (e) {
-            console.log(`投稿生成エラーですー！: ${e.message}`);
+            console.log(`投稿生成エラーですー！><: ${e.message}`);
         }
 
     } catch (e) {
