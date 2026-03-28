@@ -129,16 +129,16 @@ ${tl_text}
                 console.log(`${note.user.username} さんに返信しました。`);
                 
                 replyCount++;
-                console.log("API制限回避のため80秒待機します...");
-                await sleep(80000);
+                console.log("API制限回避のため12秒待機します...");
+                await sleep(12000);
             }
         } catch (e) {
             console.log(`メンション処理中にエラーが発生しました: ${e.message}`);
         }
 
         // 本投稿（独り言）の前に、直前のリプから間隔を空ける
-        console.log("本投稿の準備に入ります。60秒待機...");
-        await sleep(60000);
+        console.log("本投稿の準備に入ります。90秒待機...");
+        await sleep(90000);
         // --- 3. 独り言の処理 ---
         console.log("投稿を生成中です...");
         try {
@@ -159,8 +159,8 @@ ${tl_text}
             `;
 
             const post_content = await askGemini(prompt);
-            // 【追加】連投制限対策で25秒待つ
-            await sleep(25000);
+            // 【追加】連投制限対策で12秒待つ
+            await sleep(12000);
 
             // --- 3. 独り言の投稿の箇所 ---
             await mk.request('notes/create', { 
