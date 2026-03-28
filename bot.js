@@ -20,7 +20,7 @@ const mk = new misskey.api.APIClient({
 async function askGemini(prompt) {
     
 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${config.geminiKey}`;
-    
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const payload = {
         contents: [{ parts: [{ text: prompt }] }]
     };
