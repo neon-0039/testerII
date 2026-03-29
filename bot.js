@@ -47,7 +47,7 @@ async function checkAvailableModels() {
 }
 async function askGemini(prompt) {
     // 優先順位が高い順に並べる
-    const modelPriority = const modelPriority = [
+    const modelPriority = 
     // --- 3.1 Series (最新・プレビュー枠) ---
     "gemini-3.1-flash-lite-preview",
     "gemini-3.1-flash-preview",
