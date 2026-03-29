@@ -130,7 +130,21 @@ async function main() {
                 console.log(`${note.user.username} さんからのメンションを処理中...`);
 
                 let reply_prompt = "";
-                
+                // --- 2.5 リアクション判定と実行 (おみくじ/マルコフのみ) ---
+                if (user_input.includes("おみくじ") || user_input.includes("マルコフ")) {
+                    try {
+                        const reactionEmoji = user_input.includes("おみくじ") ? ":shiropuyo_good:" : ":Shiropuyo_galaxy:";
+                        await mk.request('notes/reactions/create', {
+                            noteId: note.id,
+                            reaction: reactionEmoji
+                        });
+                        console.log(`${note.user.username} さんの${user_input.includes("おみくじ") ? 'おみくじ' : 'マルコフ'}にリアクションしました`);
+                    } catch (reacErr) {
+                        console.error("リアクション失敗（スルーしてリプライへ進みます）:", reacErr.message);
+                    }
+                } else {
+                    console.log("通常リプライのため、リアクションはスキップします。");
+                }
                 if (user_input.includes("マルコフ")) {
                     console.log("マルコフ連鎖モード起動！");
                     const tl = await mk.request('notes/timeline', { limit: 30 });
