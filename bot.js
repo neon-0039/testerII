@@ -48,6 +48,9 @@ async function checkAvailableModels() {
 async function askGemini(prompt) {
     // 優先順位が高い順に並べる
     const modelPriority = [
+        "gemini-3.0-flash-live-8k",
+        "gemini-3-flash-live",
+        "gemini-2.5-flash-native-audio-dialog--preview",
         "gemini-2.5-flash-lite", // 本命（現在 20回/日）
         "gemini-3.1-flash-lite", // 予備（明日以降 500回/日 になる期待）
         "gemini-2.5-flash",     // さらに予備
