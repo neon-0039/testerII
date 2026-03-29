@@ -19,7 +19,7 @@ const jstHour = (now.getUTCHours() + 9) % 24; // UTCからJSTへ変換
 
 // 12時以降(午後)ならメイン、それ以外(午前)ならサブを使用
 const currentKey = (jstHour >= 12) ? keyMain : (keySub || keyMain); 
-
+console.log(`Mainキーの長さ: ${keyMain?.length}, Subキーの長さ: ${keySub?.length}`);
 console.log(`【システム情報】現在時刻: ${jstHour}時 / 使用APIキー: ${jstHour >= 12 ? '午後(メイン)' : '午前(サブ)'}`);
 // 現在時刻に基づいて使用するキーを決定（日本時間 JST 基準）
 
