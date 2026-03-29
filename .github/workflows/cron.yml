@@ -31,4 +31,5 @@ jobs:
           MK_TOKEN: ${{ secrets.MK_TOKEN }}
           MK_TOKEN_ID: ${{ secrets.MK_TOKEN_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_SUB: ${{ secrets.GEMINI_API_KEY_SUB }}
         run: node bot.js
