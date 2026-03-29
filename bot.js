@@ -63,8 +63,9 @@ async function askGemini(prompt) {
         "gemini-2.0-flash",
         "gemini-2.0-flash-001",
         "gemini-2.0-flash-lite-001",
-        "gemini-2.0-flash-lite"
-
+        "gemini-2.0-flash-lite",                   // 2.5標準
+        "gemini-1.5-flash",                   // 鉄板の予備
+        "gemini-1.5-flash-8b"                 // 超軽量・最終防衛ライン
     ];
 
     for (const modelId of modelPriority) {
