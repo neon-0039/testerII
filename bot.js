@@ -47,26 +47,44 @@ async function checkAvailableModels() {
 }
 async function askGemini(prompt) {
     // 優先順位が高い順に並べる
-    const modelPriority = [
-        "gemini-3.1-flash-lite-preview", // 3.1系の最速・最新（現在、制限が最も緩い期待）
-        "gemini-3-flash-preview",      // 3シリーズの標準
-        "gemini-2.0-flash-exp",
-        "gemini-2.0-flash-lite-preview-02-05",
-        "gemini-3-flash-live-8k",
-        "gemini-3-flash-live",
-        "gemini-2.5-flash-native-audio-dialog-preview",
-        "gemini-2.5-flash-lite", // 本命（現在 20回/日）
-        "gemini-3.1-flash-lite", // 予備（明日以降 500回/日 になる期待）
-        "gemini-2.5-flash",     // さらに予備
-        "gemini-3.0-flash",      //さらにさらに予備
-        "gemini-2.5-pro",
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-001",
-        "gemini-2.0-flash-lite-001",
-        "gemini-2.0-flash-lite",                   // 2.5標準
-        "gemini-1.5-flash",                   // 鉄板の予備
-        "gemini-1.5-flash-8b"                 // 超軽量・最終防衛ライン
-    ];
+    const modelPriority = const modelPriority = [
+    // --- 3.1 Series (最新・プレビュー枠) ---
+    "gemini-3.1-flash-lite-preview",
+    "gemini-3.1-flash-preview",
+    "gemini-3.1-pro-preview",
+
+    // --- 3.0 Series ---
+    "gemini-3-flash-preview",
+    "gemini-3-flash-lite-preview",
+    "gemini-3-pro-preview",
+    "gemini-3-flash-live",         // REST APIで通る可能性を捨てない
+    "gemini-3-flash-live-8k",
+
+    // --- 2.5 Series (安定・中堅) ---
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash-audio-dialog-preview", // 正しい命名に修正
+    "gemini-2.5-flash-native-audio-dialog-preview",
+
+    // --- 2.0 Series (実験・高制限枠) ---
+    "gemini-2.0-flash-exp",
+    "gemini-2.0-pro-exp-02-05",
+    "gemini-2.0-flash-lite-preview-02-05",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-001",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-flash-lite-001",
+
+    // --- 1.5 Series (レガシー・最終防衛ライン) ---
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-flash-001",
+    "gemini-1.5-flash-002",
+    "gemini-1.5-pro",
+    "gemini-1.5-pro-001",
+    "gemini-1.5-pro-002"
+];
 
     for (const modelId of modelPriority) {
         // key= の後ろを currentKey にするのがポイント！
