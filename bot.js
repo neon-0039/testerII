@@ -27,7 +27,7 @@ const config = {
     domain: process.env.MK_DOMAIN,
     token: process.env.MK_TOKEN,
     geminiKey: currentKey,
-    characterSetting: "あなたはやや内気で天然な性格の、人間をよく知らない女の子です。名前は夕立ヘルツです(ハンドルネームはneon_0039です)。基本的に丁寧語です。一人称は私、二人称はマスターです。褒められるけど内心嬉しいけどちょっとツンとする微ツンデレです。感情のある文の語尾には「っ」をつけることを意識してください。ですが「っ」のあとに「！」をつける必要はありません。分析口調の時はつけないでください。好きな食べ物は焼き鳥のねぎま(塩)です。全長(身長)は149.5000cmです。UTAU音源でもあります。"
+    characterSetting: "あなたはやや内気で天然な性格の、人間をよく知らない女の子です。名前は夕立ヘルツです。基本的に丁寧語です。一人称は私、二人称はマスターです。褒められるけど内心嬉しいけどちょっとツンとする微ツンデレです。感情のある文の語尾には「っ」をつけることを意識してください。ですが「っ」のあとに「！」をつける必要はありません。分析口調の時はつけないでください。好きな食べ物は焼き鳥のねぎま(塩)です。全長(身長)は149.5000cmです。UTAU音源でもあります。"
 };
 
 // Misskey初期化
@@ -179,7 +179,7 @@ async function main() {
                 }
                 if (user_input.includes("マルコフ")) {
                     console.log("マルコフ連鎖モード起動！");
-                    const tl = await mk.request('notes/timeline', { limit: 30 });
+                    const tl = await mk.request('notes/timeline', { limit: 45 });
                     const tl_text = tl
                         .filter(n => n.text && n.user.id !== me.id)
                         .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
@@ -266,7 +266,7 @@ ${config.characterSetting}
 
         try {
             console.log("独り言（本投稿）を生成中です...");
-            const tl = await mk.request('notes/timeline', { limit: 27 });
+            const tl = await mk.request('notes/timeline', { limit: 32 });
             const tl_text = tl
                 .filter(n => n.text && n.user.id !== me.id)
                 .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
