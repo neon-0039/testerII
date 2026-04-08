@@ -7,7 +7,7 @@ on:
   repository_dispatch:
     types: [a_bot]
   workflow_dispatch:
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
