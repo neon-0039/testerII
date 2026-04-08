@@ -6,7 +6,7 @@ concurrency:
 on:
   on:
   repository_dispatch:
-    types: [bot]  workflow_dispatch:
+    types: [a_bot]  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
