@@ -179,11 +179,11 @@ async function main() {
                 }
                 if (user_input.includes("マルコフ")) {
                     console.log("マルコフ連鎖モード起動！");
-                    const tl = await mk.request('notes/timeline', { limit: 45 });
+                    const tl = await mk.request('notes/hybrid-timeline', { limit: 54 });
                     const tl_text = tl
                         .filter(n => n.text && n.user.id !== me.id)
                         .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
-                        .slice(0, 10)
+                        .slice(0, 20)
                         .join("\n");
                         // 【新機能】35〜125文字の間でランダムな文字数制限を決定
                     const dynamicLimitM = Math.floor(Math.random() * (85 - 15 + 1)) + 15;
@@ -266,7 +266,7 @@ ${config.characterSetting}
 
         try {
             console.log("独り言（本投稿）を生成中です...");
-            const tl = await mk.request('notes/timeline', { limit: 32 });
+            const tl = await mk.request('notes/hybrid-timeline', { limit: 42 });
             const tl_text = tl
                 .filter(n => n.text && n.user.id !== me.id)
                 .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
