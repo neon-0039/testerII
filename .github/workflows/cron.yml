@@ -4,10 +4,9 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  schedule:
-    - cron: '2,11,19,28,37,45,54 * * * *'
-  workflow_dispatch:
-
+  on:
+  repository_dispatch:
+    types: [kick_bot]  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
