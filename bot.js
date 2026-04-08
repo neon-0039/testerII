@@ -35,18 +35,17 @@ const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
 });
-// リアクションを付ける関数
+// リアクションを付ける関数（書き換え後）
 async function addReaction(noteId, reaction) {
     try {
-        await axios.post(`https://${process.env.MK_DOMAIN}/api/notes/reactions/create`, {
+        await mk.request('notes/reactions/create', {
             noteId: noteId,
             reaction: reaction
-        }, {
-            headers: { 'Authorization': `Bearer ${process.env.MK_TOKEN}` }
         });
         console.log(`リアクション完了: ${reaction}`);
     } catch (e) {
-        console.error("リアクション失敗");
+        // すでにリアクション済みの場合はエラーになるため、ログは最小限に
+        console.error("リアクション送信スキップ（済み、またはエラー）");
     }
 }
 async function checkAvailableModels() {
@@ -156,17 +155,42 @@ async function main() {
         } catch (e) {
             console.log("フォロバ処理スキップ。");
         }
-        // 取得したノートをループする例
-for (const note of notes) {
-    // ノートにリアクションが存在し、かつ :akeome: が含まれているかチェック
-    if (note.reactions && note.reactions[':akeome:']) {
-        // 見つけたら自分も :akeome: を付ける
-        await addReaction(note.id, ':akeome:');
+        // --- 1.5 ホームタイムラインの取得（あけおめ判定用） ---
+        let notes = [];
+        try {
+            // notes/timeline がホームタイムライン（HTL）です
+            notes = await mk.request('notes/timeline', { limit: 30 });
+            console.log("ホームタイムラインを取得しました。");
+        } catch (e) {
+            console.log("HTL取得失敗。");
+        }
+
+        // --- 2. メンション取得・返信 ---
+        // --- 2. メンション取得・返信 & 特殊リアクション処理 ---
         
-        // 1つ見つけたら終了するなら break; を入れる
-        break; 
-    }
-}
+        // 【追加】ホームタイムラインから :akeome: を探してリアクションを返す
+        try {
+            // もし notes が HTL (notes/timeline) で取得済みならそのまま使用
+            for (const note of notes) {
+                // 1. ノートにリアクションがある
+                // 2. :akeome: が含まれている
+                // 3. 自分の投稿ではない
+                if (note.reactions && note.reactions[':akeome:'] && note.userId !== my_id) {
+                    await mk.request('notes/reactions/create', {
+                        noteId: note.id,
+                        reaction: ':akeome:'
+                    })
+                    .then(() => console.log(`[Reaction] :akeome: を ${note.user.username} さんに返しました`))
+                    .catch(() => {}); // 失敗（既にリアクション済など）は無視
+                    
+                    break; // 1回につき1つ見つけたら終了（負荷軽減）
+                }
+            }
+        } catch (e) {
+            console.log("リアクション処理失敗");
+        }
+
+        // --- ここから下にメンション返信のメイン処理が続く ---
 // --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
         try {
