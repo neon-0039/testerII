@@ -35,6 +35,20 @@ const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
 });
+// リアクションを付ける関数
+async function addReaction(noteId, reaction) {
+    try {
+        await axios.post(`https://${process.env.MK_DOMAIN}/api/notes/reactions/create`, {
+            noteId: noteId,
+            reaction: reaction
+        }, {
+            headers: { 'Authorization': `Bearer ${process.env.MK_TOKEN}` }
+        });
+        console.log(`リアクション完了: ${reaction}`);
+    } catch (e) {
+        console.error("リアクション失敗");
+    }
+}
 async function checkAvailableModels() {
     const url = `https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`;
     try {
@@ -142,7 +156,17 @@ async function main() {
         } catch (e) {
             console.log("フォロバ処理スキップ。");
         }
-
+        // 取得したノートをループする例
+for (const note of notes) {
+    // ノートにリアクションが存在し、かつ :akeome: が含まれているかチェック
+    if (note.reactions && note.reactions[':akeome:']) {
+        // 見つけたら自分も :akeome: を付ける
+        await addReaction(note.id, ':akeome:');
+        
+        // 1つ見つけたら終了するなら break; を入れる
+        break; 
+    }
+}
 // --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
         try {
