@@ -1,13 +1,3 @@
-import http from 'http';
-
-// Renderのためのダミーサーバー
-http.createServer((req, res) => {
-  res.writeHead(200);
-  res.end('Bot is alive!');
-}).listen(process.env.PORT || 3000, () => {
-  console.log('Dummy server is running for Render');
-});
-
 import * as misskey from 'misskey-js'; // ここを * as に変更
 import axios from 'axios';
 import { GoogleGenerativeAI } from "@google/generative-ai";
