@@ -143,39 +143,6 @@ async function main() {
         } catch (e) {
             console.log("フォロバ処理スキップ。");
         }
-        // --- 1.5 ホームタイムラインの取得（あけおめ判定用） ---
-        let notes = [];
-        try {
-            // notes/timeline がホームタイムライン（HTL）です
-            notes = await mk.request('notes/timeline', { limit: 30 });
-            console.log("ホームタイムラインを取得しました。");
-        } catch (e) {
-            console.log("HTL取得失敗。");
-        }
-        // --- 2. メンション取得・返信 & 特殊リアクション処理 ---
-        // 【追加】ホームタイムラインから :akeome: を探してリアクションを返す
-        try {
-            // もし notes が HTL (notes/timeline) で取得済みならそのまま使用
-            for (const note of notes) {
-                // 1. ノートにリアクションがある
-                // 2. :akeome: が含まれている
-                // 3. 自分の投稿ではない
-                if (note.reactions && note.reactions[':akeome:'] && note.userId !== my_id) {
-                    await mk.request('notes/reactions/create', {
-                        noteId: note.id,
-                        reaction: ':akeome:'
-                    })
-                    .then(() => console.log(`[Reaction] :akeome: を ${note.user.username} さんに返しました`))
-                    .catch(() => {}); // 失敗（既にリアクション済など）は無視
-                    
-                    break; // 1回につき1つ見つけたら終了（負荷軽減）
-                }
-            }
-        } catch (e) {
-            console.log("リアクション処理失敗");
-        }
-
-        // --- ここから下にメンション返信のメイン処理が続く ---
 // --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
         try {
