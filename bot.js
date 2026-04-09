@@ -35,19 +35,7 @@ const mk = new misskey.api.APIClient({
     origin: `https://${config.domain}`,
     credential: config.token
 });
-// リアクションを付ける関数（書き換え後）
-async function addReaction(noteId, reaction) {
-    try {
-        await mk.request('notes/reactions/create', {
-            noteId: noteId,
-            reaction: reaction
-        });
-        console.log(`リアクション完了: ${reaction}`);
-    } catch (e) {
-        // すでにリアクション済みの場合はエラーになるため、ログは最小限に
-        console.error("リアクション送信スキップ（済み、またはエラー）");
-    }
-}
+
 async function checkAvailableModels() {
     const url = `https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`;
     try {
@@ -164,10 +152,7 @@ async function main() {
         } catch (e) {
             console.log("HTL取得失敗。");
         }
-
-        // --- 2. メンション取得・返信 ---
         // --- 2. メンション取得・返信 & 特殊リアクション処理 ---
-        
         // 【追加】ホームタイムラインから :akeome: を探してリアクションを返す
         try {
             // もし notes が HTL (notes/timeline) で取得済みならそのまま使用
