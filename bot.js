@@ -179,7 +179,7 @@ async function main() {
                 }
                 if (user_input.includes("マルコフ")) {
                     console.log("マルコフ連鎖モード起動！");
-                    const tl = await mk.request('notes/hybrid-timeline', { limit: 54 });
+                    const tl = await mk.request('notes/hybrid-timeline', { limit: 36 });
                     const tl_text = tl
                         .filter(n => n.text && n.user.id !== me.id)
                         .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
@@ -266,7 +266,7 @@ ${config.characterSetting}
 
         try {
             console.log("独り言（本投稿）を生成中です...");
-            const tl = await mk.request('notes/hybrid-timeline', { limit: 42 });
+            const tl = await mk.request('notes/hybrid-timeline', { limit: 36 });
             const tl_text = tl
                 .filter(n => n.text && n.user.id !== me.id)
                 .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
