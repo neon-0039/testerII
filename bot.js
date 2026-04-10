@@ -112,7 +112,7 @@ async function askGemini(prompt) {
             break;
         }
     }
-    return "エラー発生！>< 人間さん！なんとかしてください！"+error.message;
+    return "エラー発生！>< 人間さん！なんとかしてください！";
 }
         
 async function main() {
