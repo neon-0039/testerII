@@ -86,7 +86,19 @@ async function askGemini(prompt) {
     "gemini-1.5-pro-001",
     "gemini-1.5-pro-002"
 ];
-
+    const errorMessages = [
+        "民主主義パンチ！！！！！！！！！！！ﾎﾞｺｫ(エラー)",
+        "ザンギエフしゅおしゅおびーむ(エラー)",
+        "エラー！管理者何とかしろ！",
+        "肌荒れと自走砲が！！！！(エラー)",
+        "粉消しゴム美味しいよ(エラー)",
+        "親から将来の夢無くなりました(エラー)",
+        "髪の毛の年越しARねぎま塩(エラー)",
+        "枝豆あげるw(エラー)",
+        "もう帰りたい、眠い、学校なう！⊂(^ω^)⊃(エラー)"
+    ];
+　　// ランダムにエラー文を選択する関数
+    const getRandomError = () => errorMessages[Math.floor(Math.random() * errorMessages.length)];
     for (const modelId of modelPriority) {
         // key= の後ろを currentKey にするのがポイント！
         const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${currentKey}`;
@@ -107,12 +119,16 @@ async function askGemini(prompt) {
                 console.warn(`⚠️ ${modelId} が発見できません。次のモデルを試します...`);
                 continue;
             }
-            // それ以外の重大なエラーはここでストップ
-            console.error("致命的なエラー！><管理者さんに報告お願いします！:", error.message);
+            // --- 重大なエラー時のログ表示 ---
+            const finalError = getRandomError();
+            console.error(`致命的なエラー！(${error.message}): ${finalError}`);
+            return finalError; // ランダムなエラー文を返す
             break;
         }
     }
-    return "エラー発生！>< 人間さん！なんとかしてください！";
+
+    // 全モデル失敗時の最終防衛ライン
+    return getRandomError();
 }
         
 async function main() {
