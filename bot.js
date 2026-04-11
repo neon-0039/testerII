@@ -49,42 +49,7 @@ async function checkAvailableModels() {
 async function askGemini(prompt) {
     // 優先順位が高い順に並べる
     const modelPriority = [
-    // --- 3.1 Series (最新・プレビュー枠) ---
-    "gemini-3.1-flash-lite-preview",
-    "gemini-3.1-flash-preview",
-    "gemini-3.1-pro-preview",
 
-    // --- 3.0 Series ---
-    "gemini-3-flash-preview",
-    "gemini-3-flash-lite-preview",
-    "gemini-3-pro-preview",
-    "gemini-3-flash-live",         // REST APIで通る可能性を捨てない
-    "gemini-3-flash-live-8k",
-
-    // --- 2.5 Series (安定・中堅) ---
-    "gemini-2.5-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-    "gemini-2.5-flash-audio-dialog-preview", // 正しい命名に修正
-    "gemini-2.5-flash-native-audio-dialog-preview",
-
-    // --- 2.0 Series (実験・高制限枠) ---
-    "gemini-2.0-flash-exp",
-    "gemini-2.0-pro-exp-02-05",
-    "gemini-2.0-flash-lite-preview-02-05",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash-lite-001",
-
-    // --- 1.5 Series (レガシー・最終防衛ライン) ---
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-1.5-flash-001",
-    "gemini-1.5-flash-002",
-    "gemini-1.5-pro",
-    "gemini-1.5-pro-001",
-    "gemini-1.5-pro-002"
 ];
     const errorMessages = [
         "民主主義パンチ！！！！！！！！！！！ﾎﾞｺｫ(エラー)",
