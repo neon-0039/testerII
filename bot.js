@@ -112,23 +112,7 @@ async function askGemini(prompt) {
             break;
         }
     }
-    // すべてのモデルが全滅、または致命的なエラーでループを抜けた場合
-    const errorMessages = [
-        "民主主義パンチ！！！！！！！！！！！ﾎﾞｺｫ(エラー)",
-        "ザンギエフしゅおしゅおびーむ(エラー)",
-        "エラー！管理者何とかしろ！",
-        "肌荒れと自走砲が！！！！(エラー)",
-        "粉消しゴム美味しいよ(エラー)",
-        "親から将来の夢無くなりました(エラー)",
-        "髪の毛の年越しARねぎま塩(エラー)",
-        "枝豆あげるw(エラー)",
-        "もう帰りたい、眠い、学校なう！⊂(^ω^)⊃(エラー)"
-    ];
-
-    // ランダムに1つ選んで返す
-    const randomIndex = Math.floor(Math.random() * errorMessages.length);
-    return errorMessages[randomIndex];
-}
+    return "エラー発生！>< 人間さん！なんとかしてください！";
 }
         
 async function main() {
