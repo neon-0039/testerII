@@ -290,7 +290,7 @@ ${config.characterSetting}
                 .slice(0, 10)
                 .join("\n");
             // 【新機能】35〜125文字の間でランダムな文字数制限を決定
-            const dynamicLimit = Math.floor(Math.random() * (125 - 15 + 1)) + 15;
+            const dynamicLimit = Math.floor(Math.random() * (100 - 15 + 1)) + 15;
             console.log(`今回の文字数制限: ${dynamicLimit}文字`);
             
             const main_post_prompt = `
@@ -317,7 +317,7 @@ ${config.characterSetting}
             
             await sleep(12000);
             await mk.request('notes/create', { 
-                text: post_content.trim().slice(0, 150),
+                text: post_content.trim().slice(0, 110),
                 visibility: 'home' 
             });
             console.log("本投稿が完了しました！");
