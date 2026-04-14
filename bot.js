@@ -287,6 +287,7 @@ ${config.characterSetting}
         await sleep(20000);
 
         try {
+            const me = await mk.request('i');
             console.log("独り言（本投稿）を生成中です...");
             const tl = await mk.request('notes/hybrid-timeline', { limit: 36 });
             const tl_text = tl
