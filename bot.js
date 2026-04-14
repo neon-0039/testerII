@@ -199,11 +199,11 @@ async function main() {
             // --- 3. 振る舞い分岐 ---
             if (user_input.includes("マルコフ")) {
                 console.log("マルコフ連鎖モード（進化版）起動！");
-                const tl = await mk.request('notes/hybrid-timeline', { limit: 64 });
+                const tl = await mk.request('notes/hybrid-timeline', { limit: 48 });
                 const tl_text = tl
                     .filter(n => n.text && n.user.id !== me.id)
                     .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
-                    .slice(0, 64)
+                    .slice(0, 32)
                     .join(" ");
 
                 // 1. 単語分解（半角カタカナ \uFF65-\uFF9F に対応！）
