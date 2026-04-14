@@ -253,6 +253,14 @@ async function main() {
 
                     for (let i = 0; i < n; i++) {
                         if (!current_word) current_word = pickNextWord(words); // 空なら復活させる
+                        // --- 長すぎるひらがな・カタカナの塊をチェック ---
+                        // 8文字以上のひらがなのみ、またはカタカナのみの単語ならスキップして再抽選
+                        if (/^[\u3040-\u309F]{8,}$|^[\u30A0-\u30FF]{8,}$/.test(current_word)) {
+                            current_word = pickNextWord(words); // 別の単語にすり替える
+                            i--; // ループ回数をカウントしないように戻す
+                            continue;
+                        }
+                        
                         generated += current_word;
 
                         // 3. ランダムに助詞を挟む
