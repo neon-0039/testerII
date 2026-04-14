@@ -198,7 +198,6 @@ async function main() {
 
             // --- 3. 振る舞い分岐 ---
             if (user_input.includes("マルコフ")) {
-if (user_input.includes("マルコフ")) {
                 console.log("マルコフ連鎖モード（進化版）起動！");
                 const tl = await mk.request('notes/hybrid-timeline', { limit: 36 });
                 const tl_text = tl
