@@ -167,7 +167,11 @@ async function main() {
 
         for (const note of mentions) {
             if (replyCount >= 4) break;
-
+            // --- ここに追加 ---
+            let reply_prompt = ""; 
+            let reply_text = "";
+            // -----------------
+            
             if (note.user.isBot || note.user.id === me.id || note.myReplyId || (note.repliesCount && note.repliesCount > 0)) {
                 continue;
             }
@@ -269,11 +273,15 @@ ${config.characterSetting}
 
                 console.log("API制限回避のため5秒待機します...");
                 await sleep(5000);
-            }
+
+            } // ← ここが for (const note of mentions) の終わり
         } catch (e) {
             console.log(`メンション処理エラー!><: ${e.message}`);
-        }
+        } // ← ここが メンション取得 try の終わり
 
+        // --- ここから下に「本投稿処理（344行目までの内容）」を書く ---
+        console.log("定期投稿の準備を開始します...");
+        try {
         // --- 3. 独り言の処理（ここが実行されるように try の外に出すか、別ブロックにする） ---
         console.log("本投稿の準備に入ります。20秒待機...");
         await sleep(20000);
