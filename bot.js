@@ -199,11 +199,11 @@ async function main() {
             // --- 3. 振る舞い分岐 ---
             if (user_input.includes("マルコフ")) {
                 console.log("マルコフ連鎖モード（進化版）起動！");
-                const tl = await mk.request('notes/hybrid-timeline', { limit: 36 });
+                const tl = await mk.request('notes/hybrid-timeline', { limit: 128 });
                 const tl_text = tl
                     .filter(n => n.text && n.user.id !== me.id)
                     .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
-                    .slice(0, 20)
+                    .slice(0, 64)
                     .join(" ");
 
                 // 1. 単語分解（半角カタカナ \uFF65-\uFF9F に対応！）
@@ -235,11 +235,11 @@ async function main() {
                         
                         // 禁止ワードが含まれていたら全体から再抽選（無限ループ防止で最大5回まで）
                         let attempts = 0;
-                        while (/(マルコフ|おみくじ|タイムライン|@|。|、)/.test(candidate) && attempts < 5) {
+                        while (/(マルコフ|おみくじ|タイムライン|@|#)/.test(candidate) && attempts < 5) {
                             candidate = words[Math.floor(Math.random() * words.length)];
                             attempts++;
                         }
-                        if (/(マルコフ|おみくじ|タイムライン|@|。|、)/.test(candidate)) return ""; // 諦めて空文字
+                        if (/(マルコフ|おみくじ|タイムライン|@|#)/.test(candidate)) return ""; // 諦めて空文字
                         
                         return candidate;
                     };
