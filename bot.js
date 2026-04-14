@@ -194,7 +194,7 @@ async function main() {
                 }
             }
 
-            let reply_text = "";
+            reply_text = "";
 
             // --- 3. 振る舞い分岐 ---
             if (user_input.includes("マルコフ")) {
