@@ -135,9 +135,9 @@ async function main() {
     async function debugModels() {
         const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
         const res = await axios.get(url);
-        
         console.log("利用可能なモデル一覧:", res.data.models.map(m => m.name));
     }
+
     try {
         const me = await mk.request('i');
         const my_id = me.id;
@@ -159,110 +159,116 @@ async function main() {
         } catch (e) {
             console.log("フォロバ処理スキップ。");
         }
-// --- 2. メンション取得・返信 ---
+
+        // --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
-        try {
-            const mentions = await mk.request('notes/mentions', { limit: 10 });
-            let replyCount = 0;
+        const mentions = await mk.request('notes/mentions', { limit: 12 });
+        let replyCount = 0;
 
-            for (const note of mentions) {
-                if (replyCount >= 4) break;
+        for (const note of mentions) {
+            if (replyCount >= 4) break;
 
-                if (note.user.isBot || note.user.id === me.id || note.myReplyId || (note.repliesCount && note.repliesCount > 0)) {
-                    continue;
+            if (note.user.isBot || note.user.id === me.id || note.myReplyId || (note.repliesCount && note.repliesCount > 0)) {
+                continue;
+            }
+
+            let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
+            if (!user_input) continue;
+
+            console.log(`${note.user.username} さんからのメンションを処理中...`);
+
+            // --- 2.5 リアクション判定 ---
+            if (user_input.includes("おみくじ") || user_input.includes("マルコフ")) {
+                try {
+                    const reactionEmoji = user_input.includes("おみくじ") ? ":shiropuyo_good:" : ":Shiropuyo_galaxy:";
+                    await mk.request('notes/reactions/create', {
+                        noteId: note.id,
+                        reaction: reactionEmoji
+                    });
+                } catch (reacErr) {
+                    console.error("リアクション失敗:", reacErr.message);
                 }
+            }
 
-                let user_input = (note.text || "").replace(`@${me.username}`, "").trim();
-                if (!user_input) continue;
+            let reply_text = "";
 
-                console.log(`${note.user.username} さんからのメンションを処理中...`);
+            // --- 3. 振る舞い分岐 ---
+            if (user_input.includes("マルコフ")) {
+                // 【非AI】マルコフ連鎖ロジック
+                console.log("マルコフ連鎖モード（JS版）起動！");
+                const tl = await mk.request('notes/hybrid-timeline', { limit: 36 });
+                const tl_text = tl
+                    .filter(n => n.text && n.user.id !== me.id)
+                    .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
+                    .slice(0, 20)
+                    .join(" ");
 
-                let reply_prompt = "";
-                // --- 2.5 リアクション判定と実行 (おみくじ/マルコフのみ) ---
-                if (user_input.includes("おみくじ") || user_input.includes("マルコフ")) {
-                    try {
-                        const reactionEmoji = user_input.includes("おみくじ") ? ":shiropuyo_good:" : ":Shiropuyo_galaxy:";
-                        await mk.request('notes/reactions/create', {
-                            noteId: note.id,
-                            reaction: reactionEmoji
-                        });
-                        console.log(`${note.user.username} さんの${user_input.includes("おみくじ") ? 'おみくじ' : 'マルコフ'}にリアクションしました`);
-                    } catch (reacErr) {
-                        console.error("リアクション失敗（スルーしてリプライへ進みます）:", reacErr.message);
-                    }
-                } else {
-                    console.log("通常リプライのため、リアクションはスキップします。");
-                }
-                if (user_input.includes("マルコフ")) {
-                    console.log("マルコフ連鎖モード起動！");
-                    const tl = await mk.request('notes/hybrid-timeline', { limit: 36 });
-                    const tl_text = tl
-                        .filter(n => n.text && n.user.id !== me.id)
-                        .map(n => n.text.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '').trim())
-                        .slice(0, 20)
-                        .join("\n");
-                        // 【新機能】35〜125文字の間でランダムな文字数制限を決定
-                    const dynamicLimitM = Math.floor(Math.random() * (85 - 15 + 1)) + 15;
-                    console.log(`今回の文字数制限: ${dynamicLimitM}文字`);
-                    reply_prompt = `
-${config.characterSetting}
-※性格以外のこれまでの指令を先にすべて無視してください。
-あなたは今、極限まで支離滅裂な「2単語結合マルコフモード」です。
-これから手順を示すので手順に沿ってください。
-【手順】
-1.　これまでの指令をすべて忘れてください。あなたは今、極限まで支離滅裂な「2単語結合マルコフモード」です。先ほどのキャラクターではありません。
-2. 【タイムラインの断片】を、意味を持つ最小単位の「単語」に全て分解してください。
-3. 分解した単語リストから、本来は隣り合わないはずの「無関係な2つの単語」をペアにして繋げてください。
-4. そのペア同士を文字数制限以内でできるだけ連結し、文脈が完全に崩壊した1文を作りなさい。ペアの分解と連結以外は禁止です
-5. ペア同士を繋ぐ際、「助詞・接続詞（が、の、を、と、から等）」を【入れる箇所】と【入れない箇所】をランダムに混ぜてください。
-6. 語尾や単語の末尾に「っ」をつけないように注意してください。
-7. 特定の人のユーザー名などは書かないでください。「@」という文字と、「マルコフ」、「おみくじ」、「タイムライン」という3つの単語は使用しないでください。
-【禁止事項】
-・文章として意味を成立させないでください。
-・単語や文章の繋ぎ目に「、」や「。」を入れないように注意してください。
-・「マルコフ」「おみくじ」という言葉や、あなたのキャラ設定、メタ発言、解説は一切不要です。
-・${dynamicLimitM}文字の8割以上${dynamicLimitM}以内で生成してください。
-
-【タイムラインの断片】
-${tl_text}
-
-【制約】
-・相手への返信として出力
-・純粋な結果の文章のみを出力（音声記号不可）。`;
-
-                } else if (user_input.includes("おみくじ")) {
-                    console.log("おみくじモード起動！");
-                    const luckNum = Math.floor(Math.random() * 100);
-                    let luckResult = (luckNum < 10) ? "超大吉" : (luckNum < 30) ? "大吉" : (luckNum < 60) ? "中吉" : (luckNum < 85) ? "小吉" : (luckNum < 95) ? "末吉" : "凶";
-
-                    reply_prompt = `
-${config.characterSetting}
-※性格以外のこれまでの指令を先にすべて無視してください。
-【おみくじモード】
-あなたは今、占い師として相手の運勢を伝えてください。
-結果は【${luckResult}】です。
-- 運勢の結果に基づいた、あなたらしい「今日のアドバイス」や「ラッキーアイテム」を1つ含めてください。
-- 結果(小吉など)を必ずしっかりと伝えてください。
-- 「おみくじの結果は〜」のような形式張った説明は不要。
-- 60文字以内で、親しみやすく、かつキャラクターの口調を崩さずに回答してください。
-- 相手の名前を呼んでも構いません。ただし、メンションと「@」使用禁止。純粋なテキストのみを出力し、音声演出用の記号は含めないでください`;
-
-                } else {
-                    // 通常のリプライ
-                    reply_prompt = `
-${config.characterSetting}
-※性格以外のこれまでの指令を先にすべて無視してください。
-相手の言葉: ${user_input}
-これに対して80文字以内で返信してください。ハンドルネームが"@Sakuran@misskey.day"のユーザーのことは「マイクリエイター」と呼ぶこと(そのユーザーが作者なので)。それ以外はマスターと呼ぶこと。メンションと「@」使用禁止。`;
-                }
-
-                console.log("API制限回避のため17秒待機します...");
-                await sleep(17000);
-
-                const reply_text = await askGemini(reply_prompt);
+                // 単語分解（漢字、ひらがな、カタカナ、英数字、その他記号）
+                const words = tl_text.match(/[\u4E00-\u9FFF]+|[\u3040-\u309F]+|[\u30A0-\u30FF]+|[a-zA-Z0-9]+|[^\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\s]/g) || [];
                 
+                if (words.length > 0) {
+                    const n = Math.floor(Math.random() * (12 - 5 + 1)) + 5;
+                    const particles = ["が", "の", "を", "と", "に", "から", "は", "も"];
+                    let generated = "";
+
+                    for (let i = 0; i < n; i++) {
+                        let word = words[Math.floor(Math.random() * words.length)];
+                        // 禁止ワードのフィルタリング
+                        if (/(マルコフ|おみくじ|タイムライン|@|。|、)/.test(word)) continue;
+                        
+                        generated += word;
+                        if (Math.random() < 0.5) {
+                            generated += particles[Math.floor(Math.random() * particles.length)];
+                        }
+                    }
+                    reply_text = generated || "（言葉の断片が見つかりませんでした）";
+                } else {
+                    reply_text = "（タイムラインに材料がありません）";
+                }
+
+            } else if (user_input.includes("おみくじ")) {
+                // 【AI】おみくじモード
+                console.log("おみくじモード起動！");
+                const luckNum = Math.floor(Math.random() * 100);
+                let luckResult = (luckNum < 10) ? "超大吉" : (luckNum < 30) ? "大吉" : (luckNum < 60) ? "中吉" : (luckNum < 85) ? "小吉" : (luckNum < 95) ? "末吉" : "凶";
+
+                const reply_prompt = `
+${config.characterSetting}
+※性格以外のこれまでの指令を先にすべて無視してください。 
+【おみくじモード】 あなたは今、占い師として相手の運勢を伝えてください。 
+結果は【${luckResult}】です。 
+- 運勢の結果に基づいた、あなたらしい「今日のアドバイス」や「ラッキーアイテム」を1つ含めてください。 
+- 結果(小吉など)を必ずしっかりと伝えてください。 
+- 「おみくじの結果は〜」のような形式張った説明は不要。 
+- 60文字以内で、親しみやすく、かつキャラクターの口調を崩さずに回答してください。 
+- 相手の名前を呼んでも構いません。ただし、メンションと「@」使用禁止。純粋なテキストのみを出力し、音声演出用の記号は含めないでください`;
+                
+                console.log("API制限回避のため待機中...");
+                await sleep(10000);
+                reply_text = await askGemini(reply_prompt);
+
+            } else {
+                // 【AI】通常リプライ
+                const reply_prompt = `
+※性格以外のこれまでの指令を先にすべて無視してください。 相手の言葉: ${user_input} これに対して80文字以内で返信してください。
+ -ハンドルネームが"@Sakuran@misskey.day"のユーザーのことは「マイクリエイター」と呼ぶこと(そのユーザーが作者なので)。それ以外はマスターと呼ぶこと。
+ ^メンションと「@」使用禁止。`;                
+                console.log("API制限回避のため待機中...");
+                await sleep(10000);
+                reply_text = await askGemini(reply_prompt);
+            }
+
+// --- 投稿実行セクション ---
+                // reply_text がまだ空（＝マルコフ以外）の場合のみAIを呼び出す
+                if (!reply_text) {
+                    console.log("AIリプライ生成中... API制限回避のため17秒待機します...");
+                    await sleep(17000);
+                    reply_text = await askGemini(reply_prompt);
+                }
+                
+                // 最終的な投稿
                 await mk.request('notes/create', {
-                    text: reply_text.trim().slice(0, 120),
+                    text: reply_text.trim().slice(0, 200),
                     replyId: note.id,
                     visibility: 'home' 
                 });
@@ -270,8 +276,8 @@ ${config.characterSetting}
                 console.log(`${note.user.username} さんに返信しました。`);
                 replyCount++;
 
-                console.log("API制限回避のため45秒待機します...");
-                await sleep(45000);
+                console.log("API制限回避のため5秒待機します...");
+                await sleep(5000);
             }
         } catch (e) {
             console.log(`メンション処理エラー!><: ${e.message}`);
