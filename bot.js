@@ -198,8 +198,8 @@ async function main() {
 
             // --- 3. 振る舞い分岐 ---
             if (user_input.includes("マルコフ")) {
-                // 【非AI】マルコフ連鎖ロジック
-                console.log("マルコフ連鎖モード（JS版）起動！");
+if (user_input.includes("マルコフ")) {
+                console.log("マルコフ連鎖モード（進化版）起動！");
                 const tl = await mk.request('notes/hybrid-timeline', { limit: 36 });
                 const tl_text = tl
                     .filter(n => n.text && n.user.id !== me.id)
@@ -207,31 +207,75 @@ async function main() {
                     .slice(0, 20)
                     .join(" ");
 
-                // 単語分解（漢字、ひらがな、カタカナ、英数字、その他記号）
-                const words = tl_text.match(/[\u4E00-\u9FFF]+|[\u3040-\u309F]+|[\u30A0-\u30FF]+|[a-zA-Z0-9]+|[^\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\s]/g) || [];
+                // 1. 単語分解（半角カタカナ \uFF65-\uFF9F に対応！）
+                const regex = /[\u4E00-\u9FFF]+|[\u3040-\u309F]+|[\u30A0-\u30FF]+|[\uFF65-\uFF9F]+|[a-zA-Z0-9]+|[^\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uFF65-\uFF9F\sa-zA-Z0-9]+/g;
+                const words = tl_text.match(regex) || [];
                 
                 if (words.length > 0) {
+                    // 2. マルコフ辞書の作成（どの単語の次にどの単語が来たかをリスト化）
+                    const markovDict = {};
+                    for (let i = 0; i < words.length - 1; i++) {
+                        const w1 = words[i];
+                        const w2 = words[i + 1];
+                        if (!markovDict[w1]) markovDict[w1] = [];
+                        markovDict[w1].push(w2); // w1の次に来た単語(w2)をリストにぶち込む
+                    }
+
+                    // 記号判定用ヘルパー関数
+                    const isSymbol = (str) => /^[^a-zA-Z0-9\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uFF65-\uFF9F]+$/.test(str);
+
+                    // 単語抽選関数（60%再抽選＆禁止ワード回避つき）
+                    const pickNextWord = (list) => {
+                        if (!list || list.length === 0) return "";
+                        let candidate = list[Math.floor(Math.random() * list.length)];
+                        
+                        // 記号組が選ばれた場合、60%の確率で再抽選
+                        if (isSymbol(candidate) && Math.random() < 0.6) {
+                            candidate = list[Math.floor(Math.random() * list.length)];
+                        }
+                        
+                        // 禁止ワードが含まれていたら全体から再抽選（無限ループ防止で最大5回まで）
+                        let attempts = 0;
+                        while (/(マルコフ|おみくじ|タイムライン|@|。|、)/.test(candidate) && attempts < 5) {
+                            candidate = words[Math.floor(Math.random() * words.length)];
+                            attempts++;
+                        }
+                        if (/(マルコフ|おみくじ|タイムライン|@|。|、)/.test(candidate)) return ""; // 諦めて空文字
+                        
+                        return candidate;
+                    };
+
                     const n = Math.floor(Math.random() * (12 - 5 + 1)) + 5;
                     const particles = ["が", "の", "を", "と", "に", "から", "は", "も"];
                     let generated = "";
+                    
+                    // 最初の単語を全体からランダムに決定
+                    let current_word = pickNextWord(words);
 
                     for (let i = 0; i < n; i++) {
-                        let word = words[Math.floor(Math.random() * words.length)];
-                        // 禁止ワードのフィルタリング
-                        if (/(マルコフ|おみくじ|タイムライン|@|。|、)/.test(word)) continue;
-                        
-                        generated += word;
-                        if (Math.random() < 0.5) {
-                            generated += particles[Math.floor(Math.random() * particles.length)];
+                        if (!current_word) current_word = pickNextWord(words); // 空なら復活させる
+                        generated += current_word;
+
+                        // 3. ランダムに助詞を挟む
+                        if (Math.random() < 0.4) {
+                            const p = particles[Math.floor(Math.random() * particles.length)];
+                            generated += p;
+                            current_word = p; // ★ここがミソ！次の単語は「この助詞の次に来た単語」を探しに行く
                         }
+
+                        // 次の単語を辞書から探す（文脈が途切れたら全体からランダム抽選に切り替え）
+                        let next_candidates = (markovDict[current_word] && markovDict[current_word].length > 0) 
+                            ? markovDict[current_word] 
+                            : words;
+                        
+                        current_word = pickNextWord(next_candidates);
                     }
                     reply_text = generated || "（言葉の断片が見つかりませんでした）";
                 } else {
                     reply_text = "（タイムラインに材料がありません）";
                 }
 
-            } else if (user_input.includes("おみくじ")) {
-                // 【AI】おみくじモード
+            } else if (user_input.includes("おみくじ")) {                // 【AI】おみくじモード
                 console.log("おみくじモード起動！");
                 const luckNum = Math.floor(Math.random() * 100);
                 let luckResult = (luckNum < 10) ? "超大吉" : (luckNum < 30) ? "大吉" : (luckNum < 60) ? "中吉" : (luckNum < 85) ? "小吉" : (luckNum < 95) ? "末吉" : "凶";
