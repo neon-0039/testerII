@@ -269,6 +269,30 @@ async function main() {
                         
                         current_word = pickNextWord(next_candidates);
                     }
+                    // --- 半角カタカナ特殊付与ロジック ---
+                    if (Math.random() < 0.5) { // 50%の確率で発動
+                        // TLから半角カタカナ（および半角記号）のみを抽出
+                        const kanaWords = words.filter(w => /^[\uFF65-\uFF9F]+$/.test(w));
+                        
+                        if (kanaWords.length > 0) {
+                            // ランダムに1つ選ぶ
+                            let suffix = kanaWords[Math.floor(Math.random() * kanaWords.length)];
+                            
+                            // 禁止ワード除外（念のため）
+                            if (!/(マルコフ|おみくじ|タイムライン|@|#)/.test(suffix)) {
+                                // 文末か、その1つ前の位置に融合
+                                if (generated.length > 2 && Math.random() < 0.5) {
+                                    // 1つ前に挿入（最後から1文字目と2文字目の間など）
+                                    const pos = generated.length - 1;
+                                    generated = generated.slice(0, pos) + suffix + generated.slice(pos);
+                                } else {
+                                    // 普通に文末に足す
+                                    generated += suffix;
+                                }
+                            }
+                        }
+                    }
+                    // --- ここまで ---
                     reply_text = generated || "（言葉の断片が見つかりませんでした）";
                 } else {
                     reply_text = "（タイムラインに材料がありません）";
