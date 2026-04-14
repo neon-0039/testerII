@@ -257,15 +257,6 @@ ${config.characterSetting}
                 await sleep(10000);
                 reply_text = await askGemini(reply_prompt);
             }
-
-// --- 投稿実行セクション ---
-                // reply_text がまだ空（＝マルコフ以外）の場合のみAIを呼び出す
-                if (!reply_text) {
-                    console.log("AIリプライ生成中... API制限回避のため17秒待機します...");
-                    await sleep(17000);
-                    reply_text = await askGemini(reply_prompt);
-                }
-                
                 // 最終的な投稿
                 await mk.request('notes/create', {
                     text: reply_text.trim().slice(0, 200),
@@ -320,7 +311,7 @@ ${config.characterSetting}
             - 「タイムラインの解析結果」「タイムライン見てみました」「タイムライン拝見しました」などは不要です。なぜならあなたはキャラそのものです。このようなメタ発言があると面白さが大きく減ります。
             - 特定の人のユーザー名などは書かないでください。「@」という文字と、「マルコフ」、「おみくじ」、「タイムライン」という3つの単語は使用しないでください。純粋なテキストのみを出力し、音声演出用の記号は含めないでください`;
 
-            const post_content = await askGemini(main_post_prompt);
+const post_content = await askGemini(main_post_prompt);
             
             await sleep(12000);
             await mk.request('notes/create', { 
@@ -328,7 +319,8 @@ ${config.characterSetting}
                 visibility: 'home' 
             });
             console.log("本投稿が完了しました！");
-} catch (e) {
+
+        } catch (e) {
             console.log(`本投稿処理エラー！><: ${e.message}`);
             
             // エラー内容をボットに呟かせる
@@ -340,10 +332,12 @@ ${config.characterSetting}
             } catch (postError) {
                 console.error("エラー投稿自体にも失敗しました:", postError.message);
             }
-        }
+        } // ← ここで本投稿の try-catch が終わる
+        
     } catch (e) {
         console.log(`致命的なエラー！><: ${e.message}`);
-    }
-}
-await checkAvailableModels();
+    } // ← ここで main 関数の try-catch が終わる
+} // ← ここで main 関数自体が終わる
+
+// 関数の実行
 main();
