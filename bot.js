@@ -278,7 +278,7 @@ async function main() {
                         current_word = pickNextWord(next_candidates);
                     }
                     // --- 半角カタカナ特殊付与ロジック ---
-                    if (Math.random() < 0.5) { // 50%の確率で発動
+                    if (Math.random() < 0.2) { // 50%の確率で発動
                         // TLから半角カタカナ（および半角記号）のみを抽出
                         const kanaWords = words.filter(w => /^[\uFF65-\uFF9F]+$/.test(w));
                         
