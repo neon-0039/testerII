@@ -138,33 +138,48 @@ async function main() {
         const my_username = me.username;
         console.log(`Logged in as: @${my_username}`);
 
-        // --- 1. 自動フォロバ処理 ---
-        console.log("未フォローのフォロワーを確認中...");
+        // --- 1. 自動フォロバ & 片想い解除処理 ---
+        console.log("フォロー状況を整理中...");
+        
         try {
-            const followers = await mk.request('users/followers', { userId: my_id, limit: 10 });
+            // 自分のフォロワーを取得（フォロバ用）
+            const followers = await mk.request('users/followers', { userId: my_id, limit: 50 });
+            // 自分がフォロー中のユーザーを取得（リムーブ用）
+            const following = await mk.request('users/following', { userId: my_id, limit: 50 });
+
+            const followerIds = followers.map(f => f.followerId);
+            const followingIds = following.map(f => f.followeeId);
+
+            // 【フォロバ】フォローしてくれているけど、自分がフォローしていない人をフォロー
             for (const f of followers) {
                 const target = f.follower;
                 if (target && !target.isFollowing && !target.isBot && target.id !== my_id) {
                     await mk.request('following/create', { userId: target.id })
-                        .then(() => console.log(`Followed back: ${target.username}`))
-                        .catch(e => console.log(`Follow back failed: ${e.message}`));
+                        .then(() => console.log(`[フォロバ成功]: @${target.username}`))
+                        .catch(e => console.error(`[フォロバ失敗]: ${e.message}`));
+                }
+            }
+
+            // 【リムーブ】自分がフォローしているけど、フォローし返してくれていない人を解除
+            for (const f of following) {
+                const target = f.followee;
+                // 相手のIDが自分のフォロワーリストに含まれていない場合
+                if (target && !followerIds.includes(target.id) && target.id !== my_id) {
+                    await mk.request('following/delete', { userId: target.id })
+                        .then(() => console.log(`[リムーブ成功]: @${target.username} (片想い解除)`))
+                        .catch(e => console.error(`[リムーブ失敗]: ${e.message}`));
                 }
             }
         } catch (e) {
-            console.log("フォロバ処理スキップ。");
+            console.log("フォロー整理処理でエラーが発生しましたが、続行します。");
         }
 
-    async function debugModels() {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
-        const res = await axios.get(url);
-        console.log("利用可能なモデル一覧:", res.data.models.map(m => m.name));
-    }
-
-    
         // --- 2. メンション取得・返信 ---
         console.log("メンション確認中...");
         const mentions = await mk.request('notes/mentions', { limit: 12 });
         let replyCount = 0;
+        
+        // ... (以下、返信ロジックへ続く)
 
         for (const note of mentions) {
             if (replyCount >= 4) break;
