@@ -627,39 +627,39 @@ async function handleDirectMessages(mk, me, config, currentKey) {
 async function buildConversationContext(mk, note, me) {
     const history = [];
 
-    //let current = note;
-    //let depth = 0;
-    //const MAX_DEPTH = 2;
+    let current = note;
+    let depth = 0;
+    const MAX_DEPTH = 2;
 
-    //while (current && depth < MAX_DEPTH) {
-        //const userName = current.user?.username || "unknown";
-        //const text = (current.text || "")
-            //.replace(`@${me.username}`, '')
-            //.replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '') // URL削除
-            //.trim();
+    while (current && depth < MAX_DEPTH) {
+        const userName = current.user?.username || "unknown";
+        const text = (current.text || "")
+            .replace(`@${me.username}`, '')
+            .replace(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g, '') // URL削除
+            .trim();
 
-        //if (text) {
-            //history.unshift({
-                //role: current.user?.id === me.id ? "assistant" : "user",
-                //name: userName,
-                //text: text.slice(0, 100) // 過度に長いテキストを制限
-            //});
-        //}
+        if (text) {
+            history.unshift({
+                role: current.user?.id === me.id ? "assistant" : "user",
+                name: userName,
+                text: text.slice(0, 100) // 過度に長いテキストを制限
+            });
+        }
 
-        //if (!current.replyId) break;
+        if (!current.replyId) break;
 
-        //try {
-            //current = await mk.request('notes/show', {
-                //noteId: current.replyId
-            //});
-        //} catch (e) {
-            //console.warn(`⚠️ 会話履歴取得失敗 (depth=${depth}): ${e.message}`);
-            //break;
-        //}
+        try {
+            current = await mk.request('notes/show', {
+                noteId: current.replyId
+            });
+        } catch (e) {
+            console.warn(`⚠️ 会話履歴取得失敗 (depth=${depth}): ${e.message}`);
+            break;
+        }
 
-        //depth++;
-        //await sleep(300);
-    //}
+        depth++;
+        await sleep(300);
+    }
 
     return history;
 }
@@ -668,23 +668,23 @@ async function buildConversationContext(mk, note, me) {
 // 🧠 会話履歴 → プロンプト変換
 // ================================
 function conversationToPrompt(history, characterSetting) {
-    //let prompt = `${characterSetting}\n`;
-    //prompt += `${config.characterSetting}　以下は会話履歴です。\n\n`;
+    let prompt = `${characterSetting}\n`;
+    prompt += `${config.characterSetting}　以下は会話履歴です。\n\n`;
 
-    //for (const msg of history) {
-        //if (msg.role === "assistant") {
-          //  prompt += `あなた: ${msg.text}\n`;
-        //} else {
+    for (const msg of history) {
+        if (msg.role === "assistant") {
+            prompt += `あなた: ${msg.text}\n`;
+        } else {
             //prompt += `${msg.name}さん: ${msg.text}\n`;
-        //}
-    //}
+        }
+    }
 
-    //prompt += `\n上の流れを踏まえて自然に返信してください。
-//- 80文字以内
-//- 必ず丁寧語で、ですます調
-//- 「@」禁止、メンション禁止
-//- 会話の流れをちゃんと踏まえること
-//- 相手の名前を呼んでも構いません`;
+    prompt += `\n上の流れを踏まえて自然に返信してください。
+- 80文字以内
+- 必ず丁寧語で、ですます調
+- 「@」禁止、メンション禁止
+- 会話の流れをちゃんと踏まえること
+- 相手の名前を呼んでも構いません`;
 　　prompt="まだ無理です"
     return prompt;
 }
@@ -760,13 +760,17 @@ function cleanBrain(brain) {
             key.includes('[') ||
             key.includes(']') ||
             key.includes('$') ||
+            key.includes('>') ||
+            key.includes('Shi') ||
+            key.includes('/') ||
+            key.includes('​') ||  // ゼロ幅スペース
+            key.includes('‼️') || // 不可視文字・絵文字コード
             /[\uD800-\uDBFF]/.test(key) ||
             /[\uDC00-\uDFFF]/.test(key) ||
             key.includes('_') ||
-            key.includes('>')||
-            key.includes('Shi')||
-            key.includes('/')||
-            /:.*:/.test(key);
+            /:.*:/.test(key) ||
+            /^[:＿]+$/.test(key) ||  // : や _ のみの行
+            key.match(/emoji|code|image|html/i);  // emoji や code 関連キーワード
 
         let list = brain[key];
 
@@ -787,11 +791,15 @@ function cleanBrain(brain) {
                     w.includes('[') ||
                     w.includes(']') ||
                     w.includes('$') ||
-                    w.includes('>')||
-                    w.includes('Shi')||
-                    w.includes('/')||
+                    w.includes('>') ||
+                    w.includes('Shi') ||
+                    w.includes('/') ||
+                    w.includes('​') ||  // ゼロ幅スペース
+                    w.includes('‼️') ||
                     /[\uD800-\uDBFF]/.test(w) ||
-                    /[\uDC00-\uDFFF]/.test(w)
+                    /[\uDC00-\uDFFF]/.test(w) ||
+                    /^[:＿]+$/.test(w) ||
+                    w.match(/emoji|code|image|html/i)
                 ) return false;
                 return w.trim() !== "";
             });
@@ -802,10 +810,9 @@ function cleanBrain(brain) {
         }
     });
 
-    console.log("✓ 脳のクリーニング完了");
+    console.log("✅ 脳のクリーニング完了！");
     return brain;
 }
-
 // ================================
 // 🧠 脳の学習
 // ================================
