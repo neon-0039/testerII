@@ -1138,7 +1138,7 @@ function generateMarkov(words, brain) {
         return candidate;
     };
 
-    const mm = Math.floor(Math.random() * (14 - 5 + 1)) + 5;
+    const mm = Math.floor(Math.random() * (10 - 6 + 1) + 6;
     let generated = "";
     let current_word = pickNextWord(words);
 
